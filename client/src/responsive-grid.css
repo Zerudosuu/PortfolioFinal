@@ -1,0 +1,23 @@
+/* Mobile: Single column stacked */
+@media (max-width: 1023px) {
+  [data-layout="responsive"] {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+  }
+
+  [data-layout="responsive"] > * {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    min-height: 224px;
+  }
+
+  [data-subgrid="true"] {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto !important;
+  }
+
+  [data-subgrid="true"] > * {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
+}
