@@ -1,0 +1,24 @@
+{
+  "label": "TESTIMONIALS",
+  "modalTitle": "Testimonials",
+  "items": [
+    {
+      "name": "Client 1",
+      "role": "Operations Manager & GHL Specialist",
+      "quote": "The follow-up workflows just run. We stopped losing leads in the inbox and I stopped babysitting the CRM.",
+      "tags": "GHL Build · Automation · Membership"
+    },
+    {
+      "name": "Client 2",
+      "role": "GHL Specialist & Agentic AI Engineer",
+      "quote": "Pipelines, forms and automations rebuilt from scratch — clean, documented, and still standing six months later.",
+      "tags": "CRM · Pipelines · Forms"
+    },
+    {
+      "name": "Client 3",
+      "role": "Web Dev & GHL Specialist",
+      "quote": "Fast, opinionated, and ships. Conversions went up the week the site went live.",
+      "tags": "Web Dev · GHL · Automation"
+    }
+  ]
+}

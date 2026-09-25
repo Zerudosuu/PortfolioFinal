@@ -1,0 +1,30 @@
+{
+  "label": "PROJECTS",
+  "modalTitle": "Projects",
+  "items": [
+    {
+      "name": "Meridian Ledger",
+      "desc": "A treasury dashboard that makes cash flow legible at a glance.",
+      "tag": "Dashboard",
+      "accent": "bg-amber-500",
+      "full": "Built with React, TypeScript, and Recharts. Features real-time cash flow tracking, multi-account aggregation, and a custom charting layer that handles irregular payment cadences without visual noise. Delivered in 6 weeks for a Series B fintech.",
+      "stack": ["React", "TypeScript", "Recharts", "Tailwind", "Vite"]
+    },
+    {
+      "name": "Nova Design System",
+      "desc": "Component library and token architecture for a SaaS product suite.",
+      "tag": "Design System",
+      "accent": "bg-violet-500",
+      "full": "A token-first design system spanning 80+ components across 3 product surfaces. Built with Tailwind, Radix, and Storybook. Reduced cross-team design inconsistencies by 60% in the first quarter after adoption.",
+      "stack": ["Tailwind", "Radix UI", "Storybook", "TypeScript", "Figma"]
+    },
+    {
+      "name": "Pulse Analytics",
+      "desc": "Real-time data visualisation platform for fintech operations teams.",
+      "tag": "Data Viz",
+      "accent": "bg-sky-500",
+      "full": "WebSocket-driven dashboard with 15+ chart types, drill-down capabilities, and a configurable alert engine. Handles 10k+ events per second in the browser using a rolling buffer architecture with React, D3, and a custom render scheduler.",
+      "stack": ["React", "D3", "WebSockets", "TypeScript", "Node.js"]
+    }
+  ]
+}

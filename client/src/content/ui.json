@@ -1,0 +1,11 @@
+{
+  "seeMore": "SEE MORE",
+  "stack": "STACK",
+  "projectPreview": "PROJECT PREVIEW",
+  "github": "GITHUB",
+  "live": "LIVE",
+  "socials": [
+    { "label": "GITHUB", "icon": "github", "href": "#" },
+    { "label": "LINKEDIN", "icon": "linkedin", "href": "https://www.linkedin.com/in/ronald-salvador/" }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "label": "DAILY DRIVERS",
+  "title": "Tools I work with",
+  "items": ["React", "TypeScript", "Tailwind", "GSAP", "Three.js", "Vite", "Figma", "Git", "Radix UI", "Node.js"]
+}

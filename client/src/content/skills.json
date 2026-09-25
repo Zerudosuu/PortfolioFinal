@@ -1,0 +1,29 @@
+{
+  "modalTitle": "Skills & Tools",
+  "categories": [
+    {
+      "category": "Frontend",
+      "items": [
+        { "label": "React", "icon": "react" },
+        { "label": "TypeScript", "icon": "typescript" },
+        { "label": "Tailwind", "icon": "tailwind" }
+      ]
+    },
+    {
+      "category": "Motion & 3D",
+      "items": [
+        { "label": "GSAP", "icon": "speed" },
+        { "label": "Three.js", "icon": "triangle" },
+        { "label": "Lenis", "icon": "git-branch" }
+      ]
+    },
+    {
+      "category": "Tooling & Design",
+      "items": [
+        { "label": "Vite", "icon": "speed" },
+        { "label": "Git", "icon": "git-branch" },
+        { "label": "Design", "icon": "pen-nib" }
+      ]
+    }
+  ]
+}

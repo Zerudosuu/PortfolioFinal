@@ -1,0 +1,47 @@
+{
+  "label": "JOURNEY",
+  "modalTitle": "Career Journey",
+  "entries": [
+    {
+      "title": "Senior Designer-Developer",
+      "company": "Acme Design Studio",
+      "period": "2023–Present",
+      "preview": [
+        "Leading design systems and frontend architecture.",
+        "Shipped 12+ projects from design through production."
+      ],
+      "bullets": [
+        "Leading design systems and frontend architecture across 4 product squads.",
+        "Shipped 12+ projects from Figma to production in 18 months.",
+        "Established component library now used by 8 engineers.",
+        "Introduced motion design language adopted site-wide."
+      ]
+    },
+    {
+      "title": "Full-Stack Designer",
+      "company": "Creative Agency Co",
+      "period": "2021–2023",
+      "preview": [
+        "Built responsive interfaces and real-time data dashboards for fintech clients."
+      ],
+      "bullets": [
+        "Built responsive interfaces and real-time data dashboards for fintech clients.",
+        "Reduced design-to-dev handoff friction by authoring a token-driven Tailwind config.",
+        "Delivered 3 major client launches on time with cross-functional teams of 10+."
+      ]
+    },
+    {
+      "title": "Frontend Engineer",
+      "company": "StartupXYZ",
+      "period": "2019–2021",
+      "preview": [
+        "Early-stage team of 5. Built core product in React."
+      ],
+      "bullets": [
+        "Early-stage team of 5. Built core product in React from 0 to paying customers.",
+        "Mentored 2 junior developers, ran weekly code reviews.",
+        "Shaped technical direction for front-end stack selection."
+      ]
+    }
+  ]
+}

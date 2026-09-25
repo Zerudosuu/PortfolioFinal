@@ -1,0 +1,27 @@
+{
+  "label": "AI BUILDS",
+  "modalTitle": "AI Builds",
+  "subtitle": "Agents, chatbots and the tools I run on them.",
+  "items": [
+    {
+      "name": "Support Agent",
+      "desc": "A triage agent that reads inbound tickets, answers what it can, and routes the rest with context attached."
+    },
+    {
+      "name": "Docs RAG Search",
+      "desc": "Retrieval pipeline over client docs with citations — answers grounded in the source, not the model's imagination."
+    },
+    {
+      "name": "SEO Content Bot",
+      "desc": "Keyword clustering to draft queue, producing briefs and outlines the team reviews before anything ships."
+    },
+    {
+      "name": "Lead Router",
+      "desc": "Scores and assigns new leads in seconds, so speed-to-lead stops depending on who was awake."
+    },
+    {
+      "name": "Meeting Noter",
+      "desc": "Joins calls, extracts decisions and action items, then files them straight into the CRM."
+    }
+  ]
+}

@@ -6,8 +6,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-    --background: oklch(0.97 0.002 240);
+/* `:root, .light` so a probe element with the `light` class resolves the
+   light palette itself (used by the theme curtain to read the destination
+   background without touching the live <html> class). */
+:root, .light {
+    --background: oklch(0.952 0.004 240);
     --foreground: oklch(0.147 0.004 49.3);
     --portrait-bg: oklch(0.93 0.06 66);
     --portrait-fg: oklch(0.55 0.09 66);
@@ -24,10 +27,12 @@
     --accent: oklch(0.93 0.004 240);
     --accent-foreground: oklch(0.214 0.009 43.1);
     --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.88 0.005 240);
+    --border: oklch(0.85 0.006 240);
     --input: oklch(0.88 0.005 240);
     --ring: oklch(0.714 0.014 41.2);
     --chart-1: oklch(0.837 0.128 66.29);
+    /* darker amber for text/icons on the light background (chart-1 itself is too pale) */
+    --chart-1-text: oklch(0.6 0.145 60);
     --chart-2: oklch(0.705 0.213 47.604);
     --chart-3: oklch(0.646 0.222 41.116);
     --chart-4: oklch(0.553 0.195 38.402);
@@ -65,6 +70,7 @@
     --input: oklch(1 0 0 / 15%);
     --ring: oklch(0.547 0.021 43.1);
     --chart-1: oklch(0.837 0.128 66.29);
+    --chart-1-text: oklch(0.837 0.128 66.29);
     --chart-2: oklch(0.705 0.213 47.604);
     --chart-3: oklch(0.646 0.222 41.116);
     --chart-4: oklch(0.553 0.195 38.402);
@@ -97,6 +103,7 @@
     --color-chart-3: var(--chart-3);
     --color-chart-2: var(--chart-2);
     --color-chart-1: var(--chart-1);
+    --color-chart-1-text: var(--chart-1-text);
     --color-ring: var(--ring);
     --color-input: var(--input);
     --color-border: var(--border);
@@ -172,6 +179,21 @@
   animation: portrait-float 7s ease-in-out infinite;
 }
 
+/* Tools marquee: infinite horizontal scroll (track holds 6 identical copies,
+   translating by exactly one copy = 1/6 of the track for a seamless loop) */
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(calc(-100% / 6)); }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 40s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
 /* Project carousel: slide in */
 @keyframes slide-in-right {
   from { transform: translateX(100%); opacity: 0; }
@@ -203,12 +225,21 @@
   animation: project-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Theme transition (pixel curtain): blocks are hidden and are revealed/hidden
+   one by one by deterministic per-block timers in
+   theme-transition-overlay.tsx — no animation-delay involved, so the stagger
+   can never collapse into one instant cover. This base rule is the safety
+   net if that JS never runs. */
+.pixel-block {
+  opacity: 0;
+}
+
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .cell-enter, .portrait-float,
   .project-slide-in-right, .project-slide-in-left,
   .project-slide-out-right, .project-slide-out-left,
-  .project-fade-in {
+  .project-fade-in, .marquee-track {
     animation: none;
     opacity: 1;
     transform: none;

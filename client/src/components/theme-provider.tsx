@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import * as React from "react"
+import { FLIP_DELAY_MS, prefersReducedMotion } from "./theme-transition"
 
 type Theme = "dark" | "light" | "system"
 type ResolvedTheme = "dark" | "light"
@@ -120,11 +121,26 @@ export function ThemeProvider({
     [disableTransitionOnChange]
   )
 
+  const initializedRef = React.useRef(false)
+
   React.useEffect(() => {
-    applyTheme(theme)
+    const firstRun = !initializedRef.current
+    initializedRef.current = true
+
+    // After first load, delay the class flip until the pixel curtain has
+    // covered the screen (FLIP_DELAY_MS) — the overlay pops destination-bg
+    // blocks in over the still-old page, hides the flip, then pops out.
+    const shouldAnimate = !firstRun && !prefersReducedMotion()
+
+    let flipTimer: number | undefined
+    if (shouldAnimate) {
+      flipTimer = window.setTimeout(() => applyTheme(theme), FLIP_DELAY_MS)
+    } else {
+      applyTheme(theme)
+    }
 
     if (theme !== "system") {
-      return undefined
+      return flipTimer === undefined ? undefined : () => window.clearTimeout(flipTimer)
     }
 
     const mediaQuery = window.matchMedia(COLOR_SCHEME_QUERY)
@@ -135,6 +151,7 @@ export function ThemeProvider({
     mediaQuery.addEventListener("change", handleChange)
 
     return () => {
+      if (flipTimer !== undefined) window.clearTimeout(flipTimer)
       mediaQuery.removeEventListener("change", handleChange)
     }
   }, [theme, applyTheme])

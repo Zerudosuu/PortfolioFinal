@@ -1,0 +1,31 @@
+{
+  "cardTitle": "Contact me",
+  "cardSubtitle": "Let's build something together",
+  "modalTitle": "Let's build something together",
+  "modalSubtitle": "Open to senior IC, lead, and contract roles. I respond within 24 hours.",
+  "email": "ronsalvador.m@gmail.com",
+  "form": {
+    "heading": "Or send a message",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "send": "SEND MESSAGE"
+  },
+  "links": [
+    {
+      "label": "Email",
+      "value": "ronsalvador.m@gmail.com",
+      "href": "mailto:ronsalvador.m@gmail.com"
+    },
+    {
+      "label": "LinkedIn",
+      "value": "linkedin.com/in/ronald-salvador",
+      "href": "https://www.linkedin.com/in/ronald-salvador/"
+    },
+    {
+      "label": "GitHub",
+      "value": "github.com/ron",
+      "href": "#"
+    }
+  ]
+}

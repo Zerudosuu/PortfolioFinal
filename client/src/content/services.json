@@ -1,0 +1,32 @@
+{
+  "label": "SERVICES",
+  "modalTitle": "Services",
+  "modalSubtitle": "What I build for coaches and agencies.",
+  "items": [
+    {
+      "name": "Coded Funnels",
+      "icon": "mouse-pointer-click",
+      "desc": "Pixel-accurate funnels written in code instead of duct-taped drag-and-drop builders."
+    },
+    {
+      "name": "GHL Automation",
+      "icon": "workflow",
+      "desc": "Pipelines, triggers and follow-ups that fire themselves and never ask for a raise."
+    },
+    {
+      "name": "CRM Setup",
+      "icon": "database",
+      "desc": "Clean data model, stages and tags that make your reporting trustworthy again."
+    },
+    {
+      "name": "Website",
+      "icon": "globe",
+      "desc": "Fast, responsive marketing sites with a real design system underneath."
+    },
+    {
+      "name": "Apps",
+      "icon": "app-window",
+      "desc": "Small internal tools that delete a repetitive task from your team's week."
+    }
+  ]
+}
