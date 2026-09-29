@@ -990,7 +990,7 @@ export function App() {
             <a
               href="#"
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1 text-[11px] tracking-[0.12em] text-foreground/55 transition-colors hover:text-foreground/75"
+              className="cursor-badge flex items-center gap-1 text-[11px] tracking-[0.12em] text-foreground/55 transition-colors hover:text-foreground/75"
             >
               <span>{UI.seeMore}</span>
               <RiArrowRightUpLine className="h-3.5 w-3.5 shrink-0" />
@@ -1025,7 +1025,7 @@ export function App() {
             <a
               href="#"
               onClick={(e) => e.stopPropagation()}
-              className="mt-2 inline-flex items-center gap-1 text-[11px] tracking-[0.1em] text-foreground/55 transition-colors hover:text-foreground/70"
+              className="cursor-badge mt-2 inline-flex items-center gap-1 text-[11px] tracking-[0.1em] text-foreground/55 transition-colors hover:text-foreground/70"
             >
               {UI.seeMore} <RiArrowRightUpLine className="h-3 w-3" />
             </a>

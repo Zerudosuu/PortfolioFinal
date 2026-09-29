@@ -2,45 +2,47 @@
   "label": "JOURNEY",
   "modalTitle": "Career Journey",
   "entries": [
+   {
+  "title": "Reporting Analyst / Automation Specialist",
+  "company": "IBM",
+  "period": "Nov 2025–Present",
+  "preview": [
+    "Collect, analyze, and interpret data from multiple sources to support business decision-making.",
+    "Design and maintain dashboards, reports, and KPIs for stakeholders."
+  ],
+  "bullets": [
+    "Collect, analyze, and interpret data from multiple sources to support business decision-making.",
+    "Design and maintain dashboards, reports, and KPIs for stakeholders using Power BI and Microsoft Fabric.",
+    "Ensure accuracy, consistency, and clarity in reporting outputs through advanced Excel automation.",
+    "Collaborate with cross-functional teams to identify trends and opportunities for process improvement.",
+    "Build and automate workflows with Power Apps and query automation to streamline recurring reporting tasks.",
+    "Explore and apply AI tools to develop internal apps and automations, reducing manual reporting work."
+  ]
+},
     {
-      "title": "Senior Designer-Developer",
-      "company": "Acme Design Studio",
-      "period": "2023–Present",
+      "title": "Game Developer / Software Developer",
+      "company": "Ryne Media · Internship",
+      "period": "Feb 2025–Jul 2025",
       "preview": [
-        "Leading design systems and frontend architecture.",
-        "Shipped 12+ projects from design through production."
+        "Contributed to environment rendering and scene optimization for a game project.",
+        "Learned and implemented custom shaders and VFX to enhance game aesthetics and performance."
       ],
       "bullets": [
-        "Leading design systems and frontend architecture across 4 product squads.",
-        "Shipped 12+ projects from Figma to production in 18 months.",
-        "Established component library now used by 8 engineers.",
-        "Introduced motion design language adopted site-wide."
+        "Contributed to environment rendering and scene optimization for our game project, ensuring immersive and visually appealing experiences.",
+        "Learned and implemented custom shaders and visual effects (VFX) to enhance game aesthetics and performance.",
+        "Managed game states and centralized systems using manager patterns, improving project structure and runtime efficiency."
       ]
     },
     {
-      "title": "Full-Stack Designer",
-      "company": "Creative Agency Co",
-      "period": "2021–2023",
+      "title": "Admin Assistant",
+      "company": "TESDA",
+      "period": "2025",
       "preview": [
-        "Built responsive interfaces and real-time data dashboards for fintech clients."
+        "Managed student data using Excel — consolidated and cleaned up records."
       ],
       "bullets": [
-        "Built responsive interfaces and real-time data dashboards for fintech clients.",
-        "Reduced design-to-dev handoff friction by authoring a token-driven Tailwind config.",
-        "Delivered 3 major client launches on time with cross-functional teams of 10+."
-      ]
-    },
-    {
-      "title": "Frontend Engineer",
-      "company": "StartupXYZ",
-      "period": "2019–2021",
-      "preview": [
-        "Early-stage team of 5. Built core product in React."
-      ],
-      "bullets": [
-        "Early-stage team of 5. Built core product in React from 0 to paying customers.",
-        "Mentored 2 junior developers, ran weekly code reviews.",
-        "Shaped technical direction for front-end stack selection."
+        "Managed student data using Excel, consolidating records from multiple sources into a single, organized dataset.",
+        "Cleaned up and standardized data entries to improve accuracy and usability for reporting."
       ]
     }
   ]

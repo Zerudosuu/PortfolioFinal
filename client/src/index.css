@@ -148,6 +148,14 @@
     }
 }
 
+/* ── Custom cursor: SEE MORE on clickable cards ─────────────── */
+/* Hand-drawn SVG badge; `pointer` is the fallback for browsers
+   that reject SVG cursors (e.g. Safari). */
+.cursor-badge {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='9' fill='%23111111' fill-opacity='0.85' stroke='%23f59e0b' stroke-width='1.5'/%3E%3Cpath d='M12 20 L20 12 M13.5 12 H20 V18.5' fill='none' stroke='%23f59e0b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") 16 16,
+    pointer;
+}
+
 /* ── Card modal — GSAP FLIP ─────────────────────────────────── */
 
 /* Static final position; GSAP drives all motion via transform */
