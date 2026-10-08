@@ -242,6 +242,54 @@
   opacity: 0;
 }
 
+/* Welcome overlay motion stays namespaced and is omitted entirely when motion
+   reduction is requested. The base states remain fully usable without it. */
+.welcome-backdrop-enter,
+.welcome-panel-enter,
+.welcome-item-enter {
+  opacity: 1;
+}
+.welcome-panel-enter {
+  transform: translateY(0);
+}
+.welcome-exit {
+  opacity: 0;
+}
+.welcome-panel-enter.welcome-exit {
+  transform: translateY(8px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes welcome-backdrop-enter {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes welcome-panel-enter {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes welcome-item-enter {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes welcome-exit {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+  .welcome-backdrop-enter {
+    animation: welcome-backdrop-enter 0.35s ease-out both;
+  }
+  .welcome-panel-enter {
+    animation: welcome-panel-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .welcome-item-enter {
+    animation: welcome-item-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .welcome-exit {
+    animation: welcome-exit 0.26s ease-in both;
+  }
+}
+
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .cell-enter, .portrait-float,
