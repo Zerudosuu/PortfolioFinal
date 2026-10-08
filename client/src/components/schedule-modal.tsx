@@ -62,9 +62,16 @@ function formatDateLabel(iso: string): string {
   }).format(new Date(`${iso}T00:00:00Z`))
 }
 
-function getInitialMonth(): number {
-  const firstAvailable = schedulingData.availableDates[0]
-  return firstAvailable ? Number(firstAvailable.slice(5, 7)) - 1 : 9
+function normalizeBookingUrl(value: string): string | null {
+  const trimmed = value.trim()
+  if (!trimmed || trimmed === "#" || trimmed.toLowerCase() === "about:blank") return null
+
+  try {
+    const url = new URL(trimmed)
+    return url.protocol === "http:" || url.protocol === "https:" ? url.href : null
+  } catch {
+    return null
+  }
 }
 
 export function ScheduleModal({
@@ -74,9 +81,10 @@ export function ScheduleModal({
   const dialogRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
-  const [month, setMonth] = useState(getInitialMonth)
+  const [month, setMonth] = useState(9)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const bookingUrl = normalizeBookingUrl(schedulingData.bookingUrl)
 
   const monthDays = useMemo(() => getMonthDays(DEMO_YEAR, month), [month])
 
@@ -131,8 +139,8 @@ export function ScheduleModal({
 
   const handleBooking = () => {
     if (!selectedDate || !selectedTime) return
-    if (schedulingData.bookingUrl) {
-      window.open(schedulingData.bookingUrl, "_blank", "noopener,noreferrer")
+    if (bookingUrl) {
+      window.open(bookingUrl, "_blank", "noopener,noreferrer")
     }
   }
 
@@ -280,7 +288,7 @@ export function ScheduleModal({
           <p className="mt-2 text-xs text-muted-foreground">
             {schedulingData.timezone}
           </p>
-          {!schedulingData.bookingUrl && selectedDate && selectedTime ? (
+          {!bookingUrl && selectedDate && selectedTime ? (
             <p className="mt-3 text-sm text-muted-foreground" role="status">
               {schedulingData.emptyBookingMessage}
             </p>
