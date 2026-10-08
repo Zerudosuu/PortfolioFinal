@@ -255,9 +255,6 @@
 .welcome-exit {
   opacity: 0;
 }
-.welcome-panel-enter.welcome-exit {
-  transform: translateY(8px);
-}
 
 @media (prefers-reduced-motion: no-preference) {
   @keyframes welcome-backdrop-enter {

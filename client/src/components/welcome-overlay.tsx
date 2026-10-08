@@ -47,6 +47,32 @@ export function WelcomeOverlay({
       if (event.key === "Escape" && !closing) {
         event.preventDefault()
         selectChoice(onVisiting)
+        return
+      }
+
+      if (event.key !== "Tab") return
+
+      const focusable = panelRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      if (!focusable?.length) {
+        event.preventDefault()
+        panelRef.current?.focus()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (!panelRef.current?.contains(document.activeElement)) {
+        event.preventDefault()
+        const target = event.shiftKey ? last : first
+        target.focus()
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
       }
     }
 
@@ -69,6 +95,7 @@ export function WelcomeOverlay({
         aria-modal="true"
         aria-labelledby="welcome-overlay-title"
         aria-describedby="welcome-overlay-body"
+        tabIndex={-1}
       >
         <p className="mb-6 text-xs tracking-[0.3em] text-muted-foreground">
           {welcomeData.label}
@@ -88,7 +115,7 @@ export function WelcomeOverlay({
         <div className="mt-10 grid gap-3 sm:grid-cols-2">
           <button
             type="button"
-            className="welcome-item-enter border border-foreground bg-foreground px-5 py-4 text-left text-background transition-opacity hover:opacity-80"
+            className="welcome-item-enter border border-foreground bg-foreground px-5 py-4 text-left text-background hover:opacity-80"
             onClick={() => selectChoice(onVisiting)}
             disabled={closing}
           >
@@ -99,7 +126,7 @@ export function WelcomeOverlay({
           </button>
           <button
             type="button"
-            className="welcome-item-enter border border-foreground/40 px-5 py-4 text-left transition-colors hover:border-foreground"
+            className="welcome-item-enter border border-foreground/40 px-5 py-4 text-left hover:border-foreground"
             onClick={() => selectChoice(onClient)}
             disabled={closing}
           >
