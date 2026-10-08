@@ -1,0 +1,13 @@
+{
+  "label": "SCHEDULE A CALL",
+  "title": "Find a time to talk",
+  "description": "Pick a demo availability window. This calendar is ready to connect to your booking provider.",
+  "timezone": "Asia/Manila (GMT+8)",
+  "bookingUrl": "",
+  "bookingLabel": "CONTINUE TO BOOKING",
+  "emptyBookingMessage": "Choose a time above. A live booking link can be added when your calendar provider is connected.",
+  "weekdays": ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"],
+  "months": ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"],
+  "availableDates": ["2026-10-08", "2026-10-09", "2026-10-12", "2026-10-14", "2026-10-16", "2026-10-20", "2026-10-22"],
+  "timeSlots": ["09:00", "10:30", "13:00", "14:30", "16:00"]
+}

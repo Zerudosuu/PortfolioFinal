@@ -1,0 +1,14 @@
+{
+  "label": "WELCOME",
+  "title": "Hi, I'm Ronald.",
+  "body": "A quick hello before you explore.",
+  "visitingChoice": {
+    "title": "Just visiting",
+    "description": "Take a look around the portfolio."
+  },
+  "clientChoice": {
+    "title": "I'm a client",
+    "description": "Find a time for us to talk."
+  },
+  "portfolioFallback": "VIEW PORTFOLIO"
+}
