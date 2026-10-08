@@ -18,6 +18,8 @@ import { AbstractGeometry } from "@/components/abstract-geometry"
 import FolderFloat from "@/components/folder-float"
 import { getIcon } from "@/components/icon-map"
 import { ThemeTransitionOverlay } from "@/components/theme-transition-overlay"
+import { WelcomeOverlay } from "@/components/welcome-overlay"
+import { ScheduleModal } from "@/components/schedule-modal"
 import headlineData from "@/content/headline.json"
 import journeyData from "@/content/journey.json"
 import projectsData from "@/content/projects.json"
@@ -51,6 +53,8 @@ type ModalCard =
   | "credentials"
   | "aibuilds"
 
+type ScheduleOrigin = "welcome" | "header" | "contact"
+
 interface ModalState {
   card: ModalCard
   originRect: DOMRect
@@ -62,7 +66,13 @@ interface ModalState {
 
 const TOOLS = toolsData.items
 
-function ToolMarquee({ onOpenSkills }: { onOpenSkills: (rect: DOMRect) => void }) {
+function ToolMarquee({
+  onOpenSkills,
+  onSchedule,
+}: {
+  onOpenSkills: (rect: DOMRect) => void
+  onSchedule: () => void
+}) {
   const labelRef = useRef<HTMLButtonElement>(null)
 
   return (
@@ -111,6 +121,13 @@ function ToolMarquee({ onOpenSkills }: { onOpenSkills: (rect: DOMRect) => void }
           </div>
         </div>
 
+        <button
+          type="button"
+          onClick={onSchedule}
+          className="shrink-0 rounded-lg border border-chart-1/40 bg-chart-1/10 px-3 py-1.5 text-[11px] tracking-wide text-chart-1-text/80 transition-all hover:bg-chart-1/20"
+        >
+          Schedule a call
+        </button>
         <ThemeToggle />
       </div>
     </header>
@@ -305,7 +322,15 @@ function ThemeToggle() {
 
 /* ── Card modal — GSAP FLIP ──────────────────────────────────── */
 
-function CardModal({ modal, onClose }: { modal: ModalState; onClose: () => void }) {
+function CardModal({
+  modal,
+  onClose,
+  onSchedule,
+}: {
+  modal: ModalState
+  onClose: () => void
+  onSchedule: (origin: ScheduleOrigin) => void
+}) {
   const cardRef  = useRef<HTMLDivElement>(null)
   const backdropRef = useRef<HTMLDivElement>(null)
   const closingRef = useRef(false)
@@ -401,7 +426,7 @@ function CardModal({ modal, onClose }: { modal: ModalState; onClose: () => void 
 
         {/* scrollable body — projects pane owns its own scroll/padding */}
         <div className={`flex-1 overflow-hidden ${modal.card === "projects" ? "p-0" : "overflow-y-auto overscroll-contain px-7 py-8"}`}>
-          <ModalContent card={modal.card} />
+          <ModalContent card={modal.card} onSchedule={onSchedule} />
         </div>
       </div>
     </div>
@@ -410,7 +435,13 @@ function CardModal({ modal, onClose }: { modal: ModalState; onClose: () => void 
 
 /* ── Modal content per card ──────────────────────────────────── */
 
-function ModalContent({ card }: { card: ModalCard }) {
+function ModalContent({
+  card,
+  onSchedule,
+}: {
+  card: ModalCard
+  onSchedule?: (origin: ScheduleOrigin) => void
+}) {
   switch (card) {
     case "headline":
       return (
@@ -579,6 +610,18 @@ function ModalContent({ card }: { card: ModalCard }) {
               </div>
             </div>
             <div className="border-t border-border/40 pt-8 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
+              {onSchedule && (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onSchedule("contact")
+                  }}
+                  className="mb-6 rounded-lg border border-chart-1/40 bg-chart-1/10 px-4 py-2 text-[12px] tracking-wide text-chart-1-text/80 transition-all hover:bg-chart-1/20"
+                >
+                  Schedule a call
+                </button>
+              )}
               <ContactForm />
             </div>
           </div>
@@ -900,6 +943,12 @@ function Cell({
 /* ── Main layout ─────────────────────────────────────────────── */
 
 export function App() {
+  const [showWelcome, setShowWelcome] = useState(() =>
+    typeof window !== "undefined" &&
+    window.sessionStorage.getItem("portfolio-welcome-complete") !== "true",
+  )
+  const [scheduleOrigin, setScheduleOrigin] = useState<ScheduleOrigin>("header")
+  const [scheduleOpen, setScheduleOpen] = useState(false)
   const [projectIdx, setProjectIdx] = useState(0)
   const [prevIdx, setPrevIdx] = useState<number | null>(null)
   const [sliding, setSliding] = useState(false)
@@ -919,6 +968,20 @@ export function App() {
     return (rect: DOMRect) => setModal({ card, originRect: rect })
   }
 
+  function finishWelcome(origin: "visiting" | "client") {
+    sessionStorage.setItem("portfolio-welcome-complete", "true")
+    setShowWelcome(false)
+    if (origin === "client") {
+      setScheduleOrigin("welcome")
+      setScheduleOpen(true)
+    }
+  }
+
+  function openSchedule(origin: ScheduleOrigin) {
+    setScheduleOrigin(origin)
+    setScheduleOpen(true)
+  }
+
   return (
     <div
       className="flex h-screen flex-col bg-background text-foreground"
@@ -927,8 +990,18 @@ export function App() {
       {/* ── Theme Transition Overlay ────────────────────────────── */}
       <ThemeTransitionOverlay />
 
+      {showWelcome && (
+        <WelcomeOverlay
+          onVisiting={() => finishWelcome("visiting")}
+          onClient={() => finishWelcome("client")}
+        />
+      )}
+
       {/* ── Tools marquee (replaces navbar) ─────────────────────── */}
-      <ToolMarquee onOpenSkills={openModal("skills")} />
+      <ToolMarquee
+        onOpenSkills={openModal("skills")}
+        onSchedule={() => openSchedule("header")}
+      />
 
       {/* ── Bento grid ────────────────────────────────────────── */}
       <div className="flex w-full flex-1 flex-col overflow-hidden p-[6px]">
@@ -1218,6 +1291,15 @@ export function App() {
         <CardModal
           modal={modal}
           onClose={() => setModal(null)}
+          onSchedule={openSchedule}
+        />
+      )}
+
+      {scheduleOpen && (
+        <ScheduleModal
+          key={scheduleOrigin}
+          onClose={() => setScheduleOpen(false)}
+          onBackToPortfolio={() => setScheduleOpen(false)}
         />
       )}
 
