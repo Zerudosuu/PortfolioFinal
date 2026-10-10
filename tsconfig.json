@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "typeRoots": ["client/node_modules/@types"],
+    "types": ["node"]
+  },
+  "include": ["api/**/*.ts"]
+}
