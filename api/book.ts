@@ -1,4 +1,4 @@
-import { configuredCalendarService, HttpError, type CalendarService, validateBookingInput } from './_lib/google-calendar.ts'
+import { allowedSlot, configuredCalendarService, HttpError, type CalendarService, validateBookingInput, verifySlotToken } from './_lib/google-calendar.ts'
 
 function overlaps(start: Date, end: Date, busy: Array<{ start: string; end: string }>) { return busy.some((item) => new Date(item.start) < end && new Date(item.end) > start) }
 function errorResponse(error: unknown, res: any) { const e = error as Partial<HttpError>; return res.status(e.statusCode || 500).json({ error: e.statusCode ? e.message : 'Internal server error' }) }
@@ -13,6 +13,8 @@ export function createBookingHandler(service: CalendarService) {
       else if (current.count >= 10) throw new HttpError(429, 'Too many booking attempts; try again later')
       else current.count++
       const input = validateBookingInput(req.body)
+      if (!allowedSlot(input.start, input.end)) throw new HttpError(400, 'Requested time is outside booking hours')
+      verifySlotToken(req.body?.token, input.start.toISOString(), input.end.toISOString())
       const busy = await service.freeBusy(input.start, input.end)
       if (overlaps(input.start, input.end, busy)) throw new HttpError(409, 'That time is no longer available')
       const event = await service.insert(input)

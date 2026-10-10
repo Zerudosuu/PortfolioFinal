@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { calendarId, validateBookingInput, getGoogleClient } from './google-calendar.ts'
+import { calendarId, validateBookingInput, getGoogleClient, slotTokenFor, verifySlotToken } from './google-calendar.ts'
 
 const originalEnv = { ...process.env }
 test.afterEach(() => {
@@ -48,4 +48,13 @@ test('requires timezone-bearing ISO dates and 30-minute slots', () => {
 
 test('rejects past booking starts', () => {
   assert.throws(() => validateBookingInput({ name: 'Ron', email: 'ron@example.com', start: '2020-11-10T10:00:00Z', end: '2020-11-10T11:00:00Z' }), /past/i)
+})
+
+test('signs and verifies allowlisted slot tokens', () => {
+  process.env.BOOKING_SLOT_SECRET = 'test-secret'
+  const start = '2026-11-10T10:00:00.000Z'
+  const end = '2026-11-10T10:30:00.000Z'
+  const token = slotTokenFor(start, end, Date.now() + 60_000)
+  assert.deepEqual(verifySlotToken(token, start, end), { start, end })
+  assert.throws(() => verifySlotToken(token, start, '2026-11-10T11:00:00.000Z'), /slot token/i)
 })

@@ -1,3 +1,5 @@
+import { createHmac, timingSafeEqual } from 'node:crypto'
+
 export class HttpError extends Error {
   statusCode: number
   constructor(statusCode: number, message: string) { super(message); this.statusCode = statusCode }
@@ -20,6 +22,47 @@ export class OAuth2Client {
 }
 
 export function calendarId(): string { return process.env.GOOGLE_CALENDAR_ID?.trim() || 'primary' }
+
+function slotSecret(): string {
+  const secret = process.env.BOOKING_SLOT_SECRET?.trim()
+  if (!secret) throw new HttpError(500, 'Missing server configuration: BOOKING_SLOT_SECRET')
+  return secret
+}
+function encoded(value: string): string { return Buffer.from(value).toString('base64url') }
+function decoded(value: string): string { return Buffer.from(value, 'base64url').toString('utf8') }
+export function slotTokenFor(start: string, end: string, expiresAt: number): string {
+  const payload = encoded(JSON.stringify({ start, end, exp: expiresAt }))
+  return `${payload}.${createHmac('sha256', slotSecret()).update(payload).digest('base64url')}`
+}
+export function verifySlotToken(token: unknown, start: string, end: string): { start: string; end: string } {
+  if (typeof token !== 'string') throw new HttpError(400, 'A valid slot token is required')
+  const [payload, signature] = token.split('.')
+  if (!payload || !signature) throw new HttpError(400, 'A valid slot token is required')
+  const expected = createHmac('sha256', slotSecret()).update(payload).digest()
+  const actual = Buffer.from(signature, 'base64url')
+  if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) throw new HttpError(400, 'Invalid slot token')
+  let parsed: { start?: string; end?: string; exp?: number }
+  try { parsed = JSON.parse(decoded(payload)) } catch { throw new HttpError(400, 'Invalid slot token') }
+  if (parsed.start !== start || parsed.end !== end || !parsed.exp || parsed.exp <= Date.now()) throw new HttpError(400, 'Invalid or expired slot token')
+  return { start, end }
+}
+
+function slotConfig() {
+  const startHour = Number(process.env.BOOKING_START_HOUR || 9)
+  const endHour = Number(process.env.BOOKING_END_HOUR || 17)
+  const weekdays = new Set((process.env.BOOKING_WEEKDAYS || '1,2,3,4,5').split(',').map((value) => Number(value.trim())).filter((value) => value >= 0 && value <= 6))
+  if (!Number.isInteger(startHour) || !Number.isInteger(endHour) || startHour < 0 || endHour > 24 || startHour >= endHour || !weekdays.size) throw new HttpError(500, 'Invalid booking slot configuration')
+  return { startHour, endHour, weekdays }
+}
+export function allowedSlot(start: Date, end: Date): boolean {
+  const { startHour, endHour, weekdays } = slotConfig()
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: process.env.BOOKING_TIMEZONE || 'Asia/Manila', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(start)
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]))
+  const day = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(values.weekday)
+  const minute = Number(values.minute); const hour = Number(values.hour) % 24
+  const duration = end.getTime() - start.getTime()
+  return weekdays.has(day) && minute % 30 === 0 && hour >= startHour && (hour + duration / 3600000) <= endHour
+}
 
 export async function getGoogleClient(): Promise<OAuth2Client> {
   const missing = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REFRESH_TOKEN'].find((key) => !process.env[key]?.trim())
