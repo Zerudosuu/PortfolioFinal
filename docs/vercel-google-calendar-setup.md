@@ -18,9 +18,16 @@ The redirect URI must match exactly, including protocol, host, path, and any cus
 
 ## 2. Generate the refresh token
 
-Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and a long random `GOOGLE_OAUTH_ADMIN_KEY` in Vercel for the **Production** environment, then redeploy. Open this URL while logged in as the calendar owner:
+Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and a long random `GOOGLE_OAUTH_ADMIN_KEY` in Vercel for the **Production** environment, then redeploy. Start the flow while logged in as the calendar owner by sending the key in a header:
 
-`https://your-project.vercel.app/api/google/start?key=YOUR_GOOGLE_OAUTH_ADMIN_KEY`
+```powershell
+Invoke-WebRequest `
+  -Uri https://your-project.vercel.app/api/google/start `
+  -Headers @{ "X-Google-OAuth-Admin-Key" = "YOUR_GOOGLE_OAUTH_ADMIN_KEY" } `
+  -MaximumRedirection 0
+```
+
+Follow the returned Google authorization URL in a browser. The legacy `?key=...` URL form remains supported for recovery, but query-string keys can leak through browser history and server logs.
 
 Approve the requested scopes. The callback displays the refresh token once. Copy it directly into the Vercel `GOOGLE_REFRESH_TOKEN` variable and remove it from clipboard history, browser history, and any temporary notes. The token is never written to this repository.
 

@@ -1,6 +1,8 @@
-import { createHmac } from "node:crypto"
+import { createHmac, timingSafeEqual } from "node:crypto"
 
 type Request = {
+  method?: string
+  body?: unknown
   query?: Record<string, string | string[] | undefined>
   headers?: Record<string, string | string[] | undefined>
 }
@@ -48,12 +50,9 @@ export function hasValidState(state: string, adminKey: string, now = Date.now())
   const [payload, signature] = state.split(".")
   if (!payload || !signature) return false
   const expected = createHmac("sha256", adminKey).update(payload).digest("base64url")
-  if (signature.length !== expected.length) return false
-  let equal = true
-  for (let index = 0; index < expected.length; index += 1) {
-    equal = equal && signature.charCodeAt(index) === expected.charCodeAt(index)
-  }
-  if (!equal) return false
+  const signatureBytes = Buffer.from(signature)
+  const expectedBytes = Buffer.from(expected)
+  if (signatureBytes.length !== expectedBytes.length || !timingSafeEqual(signatureBytes, expectedBytes)) return false
   try {
     const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as { expires?: number }
     return typeof parsed.expires === "number" && parsed.expires > now
@@ -62,15 +61,30 @@ export function hasValidState(state: string, adminKey: string, now = Date.now())
   }
 }
 
+function secretsMatch(supplied: string, expected: string | undefined): boolean {
+  if (!expected) return false
+  const suppliedBytes = Buffer.from(supplied)
+  const expectedBytes = Buffer.from(expected)
+  return suppliedBytes.length === expectedBytes.length && timingSafeEqual(suppliedBytes, expectedBytes)
+}
+
 export default function handler(req: Request, res: Response): void {
-  if (req.query?.key !== undefined && req.query?.key !== "") {
-    const supplied = single(req.query.key)
-    if (supplied !== process.env.GOOGLE_OAUTH_ADMIN_KEY) {
-      res.status(403).json({ error: "Forbidden" })
-      return
-    }
-  } else {
-    res.status(401).json({ error: "Provide the OAuth admin key as ?key=..." })
+  const authorization = single(req.headers?.authorization)
+  const headerKey = single(req.headers?.["x-google-oauth-admin-key"])
+  const bodyKey = typeof req.body === "object" && req.body !== null && "key" in req.body
+    ? String((req.body as { key?: unknown }).key ?? "")
+    : ""
+  const queryKey = single(req.query?.key)
+  const supplied = headerKey || (authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : "") || bodyKey || queryKey
+  if (!supplied) {
+    res.status(401).json({ error: "Provide the OAuth admin key in X-Google-OAuth-Admin-Key, Authorization: Bearer, or POST body" })
+    return
+  }
+  if (queryKey && !headerKey && !authorization && !bodyKey) {
+    res.setHeader("Warning", '299 - "Query admin keys can leak through logs; use X-Google-OAuth-Admin-Key"')
+  }
+  if (!secretsMatch(supplied, process.env.GOOGLE_OAUTH_ADMIN_KEY)) {
+    res.status(403).json({ error: "Forbidden" })
     return
   }
 
