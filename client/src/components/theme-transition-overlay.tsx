@@ -10,6 +10,7 @@ import {
 interface Phase {
   id: number
   color: string // destination theme's --background (seamless cover)
+  onCovered?: () => void
 }
 
 type Stage = "in" | "out"
@@ -55,9 +56,16 @@ function readThemeVar(resolved: "light" | "dark", name: string): string {
  * Pops are driven by per-block setTimeout (deterministic, observable) rather
  * than CSS animation-delay, so they can never collapse into one instant cover.
  */
-export function ThemeTransitionOverlay() {
+export function ThemeTransitionOverlay({
+  transitionKey,
+  onCovered,
+}: {
+  transitionKey?: string
+  onCovered?: () => void
+}) {
   const { theme } = useTheme()
   const prevThemeRef = useRef(theme)
+  const prevKeyRef = useRef(transitionKey)
   const idRef = useRef(0)
   const hostRef = useRef<HTMLDivElement>(null)
   const [phase, setPhase] = useState<Phase | null>(null)
@@ -67,9 +75,20 @@ export function ThemeTransitionOverlay() {
   // curtain in a microtask — after the effects, before the browser paints.
   useEffect(() => {
     const prev = prevThemeRef.current
+    const prevKey = prevKeyRef.current
     prevThemeRef.current = theme
-    if (prev === theme) return
-    if (prefersReducedMotion()) return
+    prevKeyRef.current = transitionKey
+    if (prev === theme && prevKey === transitionKey) return
+
+    let cancelled = false
+    if (prefersReducedMotion()) {
+      queueMicrotask(() => {
+        if (cancelled) return
+        setPhase(null)
+        onCovered?.()
+      })
+      return () => { cancelled = true }
+    }
 
     const resolved: "light" | "dark" =
       theme === "system"
@@ -79,13 +98,13 @@ export function ThemeTransitionOverlay() {
         : theme
 
     const color = readThemeVar(resolved, "--background")
-    if (!color) return
-
     queueMicrotask(() => {
+      if (cancelled) return
       setStage("in")
-      setPhase({ id: ++idRef.current, color })
+      setPhase({ id: ++idRef.current, color: color || "var(--background)", onCovered })
     })
-  }, [theme])
+    return () => { cancelled = true }
+  }, [theme, transitionKey, onCovered])
 
   // Stage machine + the pops themselves: every block flips opacity at its
   // own data-delay. The same delays are used on the way out — first block in
@@ -110,7 +129,10 @@ export function ThemeTransitionOverlay() {
 
     timers.push(
       window.setTimeout(
-        stage === "in" ? () => setStage("out") : () => setPhase(null),
+        stage === "in" ? () => {
+          phase.onCovered?.()
+          setStage("out")
+        } : () => setPhase(null),
         stage === "in" ? FLIP_DELAY_MS : OUT_SPREAD_MS + 140
       )
     )
@@ -162,7 +184,8 @@ export function ThemeTransitionOverlay() {
     <div
       key={phase.id}
       ref={hostRef}
-      className="pointer-events-none fixed inset-0 z-50 overflow-hidden"
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-[100] overflow-hidden"
     >
       {tiles.list.map((t) => (
         <span

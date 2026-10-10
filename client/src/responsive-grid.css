@@ -21,3 +21,43 @@
     grid-row: auto !important;
   }
 }
+
+/* A shared portrait frame keeps the torso and pockets in view at every size. */
+.portrait-stage {
+  container-type: size;
+  display: grid;
+  flex: 1 1 0%;
+  min-height: 0;
+  place-items: center;
+  overflow: hidden;
+}
+.portrait-stage .portrait-mascot {
+  /* Keep the restored 374px-wide frames from being enlarged on wide screens. */
+  width: min(100cqw, 80.194805cqh, 374px) !important;
+  height: auto !important;
+  aspect-ratio: 247 / 308;
+}
+/* The HD atlas has 467px-tall cells. Pin the jacket hem to the center
+   frame's y=452 baseline; only translate the direction layer, not reactions.
+   page-mascot exposes its selected cell through inline background-position. */
+.portrait-stage .portrait-mascot > span > span:first-child:is(
+  [style*="background-position: 0% 100%"],
+  [style*="background-position: 50% 100%"]
+) { transform: translateY(4.068522%); }
+.portrait-stage .portrait-mascot > span > span:first-child[style*="background-position: 100% 100%"] {
+  transform: translateY(3.854390%);
+}
+.portrait-stage .portrait-mascot > span > span:first-child:is(
+  [style*="background-position: 0% 0%"],
+  [style*="background-position: 50% 0%"],
+  [style*="background-position: 100% 0%"]
+) { transform: translateY(-0.856531%); }
+.portrait-stage:focus-within { outline: 2px solid var(--chart-1-text); outline-offset: -5px; }
+.portrait-stage .portrait-mascot:focus-visible { outline: none; }
+
+@media (max-width: 1023px) {
+  .portrait-cell .portrait-stage { flex: none; height: clamp(320px, 60svh, 520px); }
+  .portfolio-page { height: auto; min-height: 100svh; }
+  .portfolio-grid-shell { overflow: visible; }
+  .portfolio-grid { height: auto; }
+}

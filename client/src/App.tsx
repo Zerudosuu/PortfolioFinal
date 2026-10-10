@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { gsap } from "gsap"
+import { Mascot } from "page-mascot"
 import {
   Sun,
   Moon,
@@ -15,11 +16,10 @@ import {
 } from "@remixicon/react"
 import { useTheme } from "@/components/theme-provider"
 import { AbstractGeometry } from "@/components/abstract-geometry"
-import FolderFloat from "@/components/folder-float"
 import { getIcon } from "@/components/icon-map"
 import { ThemeTransitionOverlay } from "@/components/theme-transition-overlay"
-import { WelcomeOverlay } from "@/components/welcome-overlay"
-import { ScheduleModal } from "@/components/schedule-modal"
+import { WelcomePage } from "@/components/welcome-page"
+import { SchedulePage } from "@/components/schedule-page"
 import headlineData from "@/content/headline.json"
 import journeyData from "@/content/journey.json"
 import projectsData from "@/content/projects.json"
@@ -33,6 +33,7 @@ import contactData from "@/content/contact.json"
 import skillsData from "@/content/skills.json"
 import uiData from "@/content/ui.json"
 import "@/responsive-grid.css"
+import "@/entry-pages.css"
 
 /* ── Content (edit text in client/src/content/*.json) ─────────── */
 
@@ -465,7 +466,7 @@ function ModalContent({
               {UI.socials.map((s) => {
                 const Icon = getIcon(s.icon)
                 return (
-                  <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
+                  <a key={s.label} href={s.href === "#" ? "#/portfolio" : s.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
                     {Icon && <Icon className="h-4 w-4" />}{s.label}
                   </a>
                 )
@@ -538,9 +539,13 @@ function ModalContent({
       return (
         <div className="relative">
           <div className="flex flex-col items-center gap-8 py-8 text-center relative z-10">
-            <div className="flex h-32 w-32 items-center justify-center rounded-full border-2 border-chart-1/60 bg-portrait-bg">
-              <span className="text-[52px] font-black text-portrait-fg">R</span>
-            </div>
+            <Mascot
+              directions={import.meta.env.BASE_URL + "mascots/portrait-directions.webp"}
+              reactions={import.meta.env.BASE_URL + "mascots/portrait-reactions.webp"}
+              size={240}
+              label="Ron portrait"
+              className="aspect-square h-auto! max-w-full rounded-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-chart-1"
+            />
             <div>
               <h2 className="text-[28px] font-extrabold tracking-tight">Ron Salvador</h2>
               <p className="mt-1 text-[14px] text-chart-1-text/80">Designer-Developer</p>
@@ -551,7 +556,7 @@ function ModalContent({
             <div className="flex gap-4">
               {[{ icon: <RiGithubLine className="h-4 w-4" />, label: "GITHUB" },
                 { icon: <RiLinkedinLine className="h-4 w-4" />, label: "LINKEDIN" }].map(({ icon, label }) => (
-                <a key={label} href="#" className="flex items-center gap-2 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
+                <a key={label} href="#/portfolio" className="flex items-center gap-2 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
                   {icon}{label}
                 </a>
               ))}
@@ -886,10 +891,10 @@ function ProjectsPane() {
 
             {/* links */}
             <div className="mt-8 flex gap-3 pb-4">
-              <a href="#" className="flex items-center gap-1.5 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
+              <a href="#/portfolio" className="flex items-center gap-1.5 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
                 <RiGithubLine className="h-3.5 w-3.5" /> {UI.github}
               </a>
-              <a href="#" className="flex items-center gap-1.5 rounded-lg border border-chart-1/40 bg-chart-1/10 px-4 py-2 text-[12px] tracking-[0.1em] text-chart-1-text/80 transition-all hover:bg-chart-1/20">
+              <a href="#/portfolio" className="flex items-center gap-1.5 rounded-lg border border-chart-1/40 bg-chart-1/10 px-4 py-2 text-[12px] tracking-[0.1em] text-chart-1-text/80 transition-all hover:bg-chart-1/20">
                 <RiArrowRightUpLine className="h-3.5 w-3.5" /> {UI.live}
               </a>
             </div>
@@ -942,13 +947,7 @@ function Cell({
 
 /* ── Main layout ─────────────────────────────────────────────── */
 
-export function App() {
-  const [showWelcome, setShowWelcome] = useState(() =>
-    typeof window !== "undefined" &&
-    window.sessionStorage.getItem("portfolio-welcome-complete") !== "true",
-  )
-  const [scheduleOrigin, setScheduleOrigin] = useState<ScheduleOrigin>("header")
-  const [scheduleOpen, setScheduleOpen] = useState(false)
+function Portfolio() {
   const [projectIdx, setProjectIdx] = useState(0)
   const [prevIdx, setPrevIdx] = useState<number | null>(null)
   const [sliding, setSliding] = useState(false)
@@ -968,45 +967,27 @@ export function App() {
     return (rect: DOMRect) => setModal({ card, originRect: rect })
   }
 
-  function finishWelcome(origin: "visiting" | "client") {
-    sessionStorage.setItem("portfolio-welcome-complete", "true")
-    setShowWelcome(false)
-    if (origin === "client") {
-      setScheduleOrigin("welcome")
-      setScheduleOpen(true)
-    }
-  }
-
-  function openSchedule(origin: ScheduleOrigin) {
-    setScheduleOrigin(origin)
-    setScheduleOpen(true)
+  function openSchedule() {
+    window.location.hash = "/booking"
   }
 
   return (
-    <div
-      className="flex h-screen flex-col bg-background text-foreground"
+    <main
+      className="portfolio-page flex h-screen flex-col bg-background text-foreground"
       style={{ fontFamily: "'JetBrains Mono Variable', monospace" }}
     >
       {/* ── Theme Transition Overlay ────────────────────────────── */}
-      <ThemeTransitionOverlay />
-
-      {showWelcome && (
-        <WelcomeOverlay
-          onVisiting={() => finishWelcome("visiting")}
-          onClient={() => finishWelcome("client")}
-        />
-      )}
 
       {/* ── Tools marquee (replaces navbar) ─────────────────────── */}
       <ToolMarquee
         onOpenSkills={openModal("skills")}
-        onSchedule={() => openSchedule("header")}
+        onSchedule={openSchedule}
       />
 
       {/* ── Bento grid ────────────────────────────────────────── */}
-      <div className="flex w-full flex-1 flex-col overflow-hidden p-[6px]">
+      <div className="portfolio-grid-shell flex w-full flex-1 flex-col overflow-hidden p-[6px]">
         <div
-          className="grid h-full gap-[6px]"
+          className="portfolio-grid grid h-full gap-[6px]"
           style={{
             gridTemplateColumns: "54fr 24fr 22fr",
             gridTemplateRows: "1fr 2fr 1fr",
@@ -1032,20 +1013,21 @@ export function App() {
 
         {/* ── 2. PROFILE PHOTO ────────────────────────────────── */}
         <Cell
-          className="row-span-2 flex flex-col overflow-hidden bg-portrait-bg"
+          className="portrait-cell row-span-2 flex min-h-0 flex-col overflow-hidden bg-portrait-bg"
           style={{ gridColumn: 2, gridRow: "1 / 3" }}
           enterDelay={60}
         >
-          <div className="flex flex-1 items-center justify-center overflow-hidden">
-            <span
-              className="portrait-float select-none font-black leading-none text-portrait-fg"
-              style={{ fontSize: 140 }}
-            >
-              R
-            </span>
+          <div className="portrait-stage">
+            <Mascot
+              directions={import.meta.env.BASE_URL + "mascots/portrait-halfbody-hd-directions.webp"}
+              reactions={import.meta.env.BASE_URL + "mascots/portrait-halfbody-hd-reactions.webp"}
+              size={320}
+              label="Ron portrait"
+              className="portrait-mascot"
+            />
           </div>
           <p className="border-t border-portrait-fg/20 px-5 py-3 text-[11px] tracking-[0.14em] text-portrait-fg/70">
-            portrait / placeholder
+            Move your cursor. Tap to say hi.
           </p>
         </Cell>
 
@@ -1061,7 +1043,7 @@ export function App() {
           <div className="flex items-start justify-between p-4 pb-3">
             <span className="text-[11px] tracking-[0.18em] text-foreground/55">{projectsData.label}</span>
             <a
-              href="#"
+              href="#/portfolio"
               onClick={(e) => e.stopPropagation()}
               className="cursor-badge flex items-center gap-1 text-[11px] tracking-[0.12em] text-foreground/55 transition-colors hover:text-foreground/75"
             >
@@ -1096,7 +1078,7 @@ export function App() {
             <p className="mt-1.5 text-[14px] font-semibold leading-snug text-foreground/85">{project.name}</p>
             <p className="mt-1 text-[12px] leading-relaxed text-foreground/60">{project.desc}</p>
             <a
-              href="#"
+              href="#/portfolio"
               onClick={(e) => e.stopPropagation()}
               className="cursor-badge mt-2 inline-flex items-center gap-1 text-[11px] tracking-[0.1em] text-foreground/55 transition-colors hover:text-foreground/70"
             >
@@ -1139,7 +1121,7 @@ export function App() {
                 return (
                   <a
                     key={s.label}
-                    href={s.href}
+                    href={s.href === "#" ? "#/portfolio" : s.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
@@ -1295,19 +1277,47 @@ export function App() {
         />
       )}
 
-      {scheduleOpen && (
-        <ScheduleModal
-          key={scheduleOrigin}
-          onClose={() => setScheduleOpen(false)}
-          onBackToPortfolio={() => setScheduleOpen(false)}
-        />
-      )}
-
       {/* ── Folder Float ────────────────────────────────────────── */}
       {/* <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-10">
         <FolderFloat />
       </div> */}
-    </div>
+    </main>
+  )
+}
+
+type Page = "welcome" | "portfolio" | "booking"
+
+function currentPage(): Page {
+  const hash = window.location.hash
+  if (hash === "#/portfolio") return "portfolio"
+  if (hash === "#/booking") return "booking"
+  return "welcome"
+}
+
+export function App() {
+  const [page, setPage] = useState<Page>(currentPage)
+  const [destination, setDestination] = useState<Page>(currentPage)
+  const revealPage = useCallback(() => setPage(destination), [destination])
+
+  useEffect(() => {
+    const onNavigate = () => setDestination(currentPage())
+    window.addEventListener("hashchange", onNavigate)
+    return () => window.removeEventListener("hashchange", onNavigate)
+  }, [])
+
+  useEffect(() => {
+    document.title = `${page === "welcome" ? "Welcome" : page === "booking" ? "Book a conversation" : "Portfolio"} | Ron Salvador`
+    window.scrollTo(0, 0)
+    const heading = document.querySelector<HTMLElement>("main h1")
+    heading?.setAttribute("tabindex", "-1")
+    heading?.focus({ preventScroll: true })
+  }, [page])
+
+  return (
+    <>
+      <ThemeTransitionOverlay transitionKey={destination} onCovered={revealPage} />
+      {page === "welcome" ? <WelcomePage /> : page === "booking" ? <SchedulePage /> : <Portfolio />}
+    </>
   )
 }
 
