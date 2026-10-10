@@ -26,4 +26,10 @@ export function createAvailabilityHandler(service: CalendarService) {
     } catch (error) { return errorResponse(error, res) }
   }
 }
-export default async function handler(req: any, res: any) { return createAvailabilityHandler(await configuredCalendarService())(req, res) }
+export default async function handler(req: any, res: any) {
+  try {
+    return await createAvailabilityHandler(await configuredCalendarService())(req, res)
+  } catch (error) {
+    return errorResponse(error, res)
+  }
+}
