@@ -39,3 +39,13 @@ test('rejects malformed email and overlong bookings', () => {
   assert.throws(() => validateBookingInput({ start: '2026-11-10T10:00:00Z', end: '2026-11-10T11:00:00Z', name: 'Ron', email: 'bad', message: '' }), /email/i)
   assert.throws(() => validateBookingInput({ start: '2026-11-10T10:00:00Z', end: '2026-11-10T12:01:00Z', name: 'Ron', email: 'ron@example.com' }), /120/i)
 })
+
+test('requires timezone-bearing ISO dates and 30-minute slots', () => {
+  const base = { name: 'Ron', email: 'ron@example.com' }
+  assert.throws(() => validateBookingInput({ ...base, start: '2026-11-10T10:00:00', end: '2026-11-10T11:00:00Z' }), /timezone/i)
+  assert.throws(() => validateBookingInput({ ...base, start: '2026-11-10T10:15:00Z', end: '2026-11-10T11:15:00Z' }), /30-minute/i)
+})
+
+test('rejects past booking starts', () => {
+  assert.throws(() => validateBookingInput({ name: 'Ron', email: 'ron@example.com', start: '2020-11-10T10:00:00Z', end: '2020-11-10T11:00:00Z' }), /past/i)
+})

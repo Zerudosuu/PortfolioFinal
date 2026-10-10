@@ -27,8 +27,9 @@ export async function getGoogleClient(): Promise<OAuth2Client> {
   return new OAuth2Client(process.env.GOOGLE_CLIENT_ID!, process.env.GOOGLE_CLIENT_SECRET!, process.env.GOOGLE_REFRESH_TOKEN!)
 }
 
-function parseDate(value: unknown, label: string): Date {
+export function parseIsoDate(value: unknown, label: string): Date {
   if (typeof value !== 'string' || !value.trim()) throw new HttpError(400, `${label} is required`)
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)) throw new HttpError(400, `${label} must be an ISO date with timezone`)
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) throw new HttpError(400, `${label} must be an ISO date`)
   return date
@@ -37,11 +38,18 @@ function parseDate(value: unknown, label: string): Date {
 export function validateBookingInput(value: unknown): { start: Date; end: Date; name: string; email: string; message: string } {
   if (!value || typeof value !== 'object') throw new HttpError(400, 'Booking body must be an object')
   const body = value as Record<string, unknown>
-  const start = parseDate(body.start, 'start')
-  const end = parseDate(body.end, 'end')
+  const start = parseIsoDate(body.start, 'start')
+  const end = parseIsoDate(body.end, 'end')
   const duration = end.getTime() - start.getTime()
   if (duration <= 0) throw new HttpError(400, 'end must be after start')
   if (duration > 120 * 60 * 1000) throw new HttpError(400, 'Booking duration cannot exceed 120 minutes')
+  const startText = body.start as string
+  const startMinute = Number(startText.slice(14, 16))
+  if (![0, 30].includes(startMinute) || duration % (30 * 60 * 1000) !== 0) throw new HttpError(400, 'Bookings must use 30-minute slots')
+  const minimumStart = Date.now() + Number(process.env.BOOKING_MIN_LEAD_MINUTES || 0) * 60 * 1000
+  const maximumStart = Date.now() + Number(process.env.BOOKING_MAX_DAYS || 62) * 24 * 60 * 60 * 1000
+  if (start.getTime() < minimumStart) throw new HttpError(400, 'Booking start cannot be in the past')
+  if (start.getTime() > maximumStart) throw new HttpError(400, 'Booking start is outside the booking window')
   const name = typeof body.name === 'string' ? body.name.trim() : ''
   if (!name) throw new HttpError(400, 'name is required')
   const email = typeof body.email === 'string' ? body.email.trim() : ''
@@ -69,7 +77,10 @@ export function createGoogleCalendarService(client: OAuth2Client): CalendarServi
       return body.calendars?.[calendarId()]?.busy || []
     },
     async insert(input) {
-      const event = { summary: `Portfolio call with ${input.name}`, description: input.message, start: { dateTime: input.start.toISOString(), timeZone: process.env.BOOKING_TIMEZONE || 'Asia/Manila' }, end: { dateTime: input.end.toISOString(), timeZone: process.env.BOOKING_TIMEZONE || 'Asia/Manila' }, attendees: [{ email: input.email }] }
+      const attendees = [{ email: input.email }]
+      const hostEmail = process.env.BOOKING_HOST_EMAIL || process.env.GOOGLE_CALENDAR_OWNER_EMAIL
+      if (hostEmail) attendees.push({ email: hostEmail })
+      const event = { summary: `Portfolio call with ${input.name}`, description: input.message, start: { dateTime: input.start.toISOString(), timeZone: process.env.BOOKING_TIMEZONE || 'Asia/Manila' }, end: { dateTime: input.end.toISOString(), timeZone: process.env.BOOKING_TIMEZONE || 'Asia/Manila' }, attendees }
       return request(`/calendars/${encodeURIComponent(calendarId())}/events?sendUpdates=all`, { method: 'POST', body: JSON.stringify(event) })
     },
   }

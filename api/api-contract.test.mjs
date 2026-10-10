@@ -35,9 +35,27 @@ test('booking returns event shape when slot is free', async () => {
   assert.deepEqual(res.body, { eventId: 'event-1', htmlLink: 'https://calendar.google.com/event-1' })
 })
 
+test('booking rejects a malformed Google event response', async () => {
+  const res = response()
+  const invalidService = { ...service, async insert() { return { id: '', htmlLink: '' } } }
+  await createBookingHandler(invalidService)(request('POST', {}, { start: '2026-11-10T12:00:00Z', end: '2026-11-10T13:00:00Z', name: 'Ron', email: 'ron@example.com' }), res)
+  assert.equal(res.statusCode, 502)
+})
+
 test('booking returns conflict when recheck overlaps', async () => {
   const conflict = { async freeBusy() { return [{ start: '2026-11-10T12:30:00Z', end: '2026-11-10T13:30:00Z' }] }, async insert() { throw new Error('must not insert') } }
   const res = response()
   await createBookingHandler(conflict)(request('POST', {}, { start: '2026-11-10T12:00:00Z', end: '2026-11-10T13:00:00Z', name: 'Ron', email: 'ron@example.com' }), res)
   assert.equal(res.statusCode, 409)
+})
+
+test('booking rate limits repeated attempts from one client', async () => {
+  const handler = createBookingHandler(service)
+  const body = { start: '2026-11-11T12:00:00Z', end: '2026-11-11T13:00:00Z', name: 'Ron', email: 'ron@example.com' }
+  let last
+  for (let index = 0; index < 11; index++) {
+    last = response()
+    await handler({ ...request('POST', {}, body), headers: { 'x-forwarded-for': 'rate-test' } }, last)
+  }
+  assert.equal(last.statusCode, 429)
 })
