@@ -1,0 +1,150 @@
+.entry-page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 clamp(24px, 5vw, 88px);
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.google-booking-calendar {
+  display: block;
+  width: 100%;
+  min-height: 720px;
+  height: 80svh;
+  margin-top: 28px;
+  border: 0;
+  background: white;
+  color-scheme: light;
+}
+
+.entry-header, .entry-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding-block: 28px;
+}
+
+.entry-header { border-bottom: 1px solid var(--border); }
+.entry-name { font-size: 17px; font-weight: 700; letter-spacing: -0.025em; }
+.entry-name span { color: var(--chart-1-text); }
+.entry-location, .entry-back, .entry-footer { font-size: 12px; color: var(--muted-foreground); }
+.entry-footer { border-top: 1px solid var(--border); }
+.entry-footer a { display: inline-flex; align-items: center; gap: 10px; color: var(--foreground); }
+.entry-page a { text-decoration-thickness: 1px; text-underline-offset: 5px; }
+.entry-page a:focus-visible, .entry-page button:focus-visible {
+  outline: 2px solid var(--chart-1-text);
+  outline-offset: 6px;
+}
+.entry-page h1:focus { outline: none; }
+.entry-page ::selection { background: var(--chart-1); color: #24190e; }
+
+.welcome-layout {
+  width: 100%;
+  max-width: 1360px;
+  margin: auto;
+  padding-block: clamp(36px, 5vh, 72px);
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  gap: clamp(32px, 6vw, 100px);
+  flex: 1;
+}
+.welcome-copy h1 {
+  max-width: 8ch;
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(48px, 6.5vw, 96px);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.welcome-description {
+  margin-top: 28px;
+  max-width: 38ch;
+  line-height: 1.7;
+  color: var(--muted-foreground);
+  font-size: 15px;
+}
+.welcome-choices { margin-top: 40px; max-width: 480px; }
+.welcome-choice {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 24px 0;
+  border-top: 1px solid var(--border);
+}
+.welcome-choice:last-child { border-bottom: 1px solid var(--border); }
+.welcome-choice strong { display: block; font-size: 18px; font-weight: 600; }
+.welcome-choice span span { display: block; margin-top: 8px; font-size: 12px; line-height: 1.6; color: var(--muted-foreground); }
+.welcome-choice svg { flex-shrink: 0; color: var(--chart-1-text); }
+.welcome-choice:hover strong { color: var(--chart-1-text); }
+.welcome-portrait {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: clamp(420px, 65svh, 660px);
+  background: var(--portrait-bg);
+  position: relative;
+}
+.welcome-portrait::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--chart-1-text);
+  transform-origin: left;
+}
+.welcome-portrait p { padding: 20px 16px; text-align: center; font-size: 11px; color: var(--muted-foreground); }
+.booking-content { width: 100%; max-width: 1080px; margin: 0 auto; padding-block: clamp(32px, 7vh, 80px); }
+.booking-content h1 { font-weight: 500; text-wrap: balance; }
+.booking-content footer { padding-bottom: 24px; }
+.booking-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+  padding: 12px 14px;
+  font: inherit;
+  letter-spacing: normal;
+}
+.booking-input:focus { border-color: var(--foreground); outline: 2px solid var(--chart-1-text); outline-offset: 2px; }
+.booking-input::placeholder { color: var(--muted-foreground); }
+
+/* One short entrance: the portrait's frame draws in as the greeting opens. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes greeting-open {
+    from { clip-path: inset(0 0 16% 0); transform: translateY(12px); opacity: 0.75; }
+    to { clip-path: inset(0); transform: none; opacity: 1; }
+  }
+  @keyframes portrait-arrive {
+    from { transform: translateX(16px); opacity: 0.65; }
+    to { transform: none; opacity: 1; }
+  }
+  @keyframes frame-draw {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  .welcome-copy h1 { animation: greeting-open 650ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .welcome-portrait { animation: portrait-arrive 700ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .welcome-portrait::before { animation: frame-draw 750ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .welcome-choice svg { transition: transform 180ms ease; }
+  .welcome-choice:hover svg { transform: translate(3px, -3px); }
+}
+
+@media (max-width: 700px) {
+  .entry-header, .entry-footer { padding-block: 22px; }
+  .entry-location { max-width: 16ch; text-align: right; font-size: 10px; }
+  .welcome-layout { grid-template-columns: 1fr; gap: 36px; padding-block: 36px; }
+  .welcome-copy h1 { max-width: 11ch; font-size: clamp(44px, 12vw, 72px); }
+  .welcome-description { margin-top: 20px; }
+  .welcome-choices { max-width: none; margin-top: 28px; }
+  .welcome-choice { padding-block: 20px; }
+  .welcome-portrait { height: clamp(300px, 62svh, 460px); }
+  .entry-footer { align-items: flex-start; flex-direction: column; gap: 16px; }
+}
