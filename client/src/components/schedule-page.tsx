@@ -3,7 +3,7 @@ import schedulingData from "../content/scheduling.json"
 import { googleBookingUrl } from "../lib/google-booking"
 
 type CalendarDate = { iso: string; day: number; inMonth: boolean; available: boolean }
-type BusyInterval = { start: string; end: string }
+type AvailableSlot = { start: string; end: string; token: string }
 type BookingState = "idle" | "loading" | "success" | "conflict" | "error"
 
 const BOOKING_TIMEZONE = "Asia/Manila"
@@ -49,13 +49,10 @@ function isPastSlot(iso: string, time: string): boolean {
   return slotDate(iso, time).getTime() <= Date.now()
 }
 
-function isBusy(slot: Date, durationMinutes: number, busy: BusyInterval[]): boolean {
-  const end = new Date(slot.getTime() + durationMinutes * 60_000)
-  return busy.some((interval) => {
-    const start = Date.parse(interval.start)
-    const finish = Date.parse(interval.end)
-    return Number.isFinite(start) && Number.isFinite(finish) && slot.getTime() < finish && end.getTime() > start
-  })
+function findAvailableSlot(slots: AvailableSlot[], iso: string, time: string): AvailableSlot | undefined {
+  const start = slotDate(iso, time)
+  const end = new Date(start.getTime() + 30 * 60_000)
+  return slots.find((slot) => slot.start === start.toISOString() && slot.end === end.toISOString())
 }
 
 function normalizeBookingUrl(value: string): string | null {
@@ -83,7 +80,7 @@ export function SchedulePage() {
   const initial = initialMonth()
   const [year, setYear] = useState(initial.year)
   const [month, setMonth] = useState(initial.month)
-  const [busy, setBusy] = useState<BusyInterval[]>([])
+  const [slots, setSlots] = useState<AvailableSlot[]>([])
   const [availabilityState, setAvailabilityState] = useState<"loading" | "ready" | "error">("loading")
   const [loadedMonth, setLoadedMonth] = useState<string | null>(null)
   const [availabilityRevision, setAvailabilityRevision] = useState(0)
@@ -107,8 +104,8 @@ export function SchedulePage() {
     fetch(`/api/availability?from=${encodeURIComponent(monthStart)}&to=${encodeURIComponent(monthEnd)}`, { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error("Availability request failed")
-        const data = (await response.json()) as { busy?: BusyInterval[] }
-        setBusy(Array.isArray(data.busy) ? data.busy : [])
+        const data = (await response.json()) as { slots?: AvailableSlot[] }
+        setSlots(Array.isArray(data.slots) ? data.slots.filter((slot) => typeof slot?.start === "string" && typeof slot?.end === "string" && typeof slot?.token === "string") : [])
         setLoadedMonth(monthKey)
         setAvailabilityState("ready")
       })
@@ -130,12 +127,12 @@ export function SchedulePage() {
     const dates = new Set<string>()
     for (let day = 1; day <= daysInMonth; day += 1) {
       const iso = toIsoDate(new Date(year, month, day))
-      if (iso >= today && schedulingData.timeSlots.some((time) => !isBusy(slotDate(iso, time), 30, busy))) dates.add(iso)
+      if (iso >= today && schedulingData.timeSlots.some((time) => !isPastSlot(iso, time) && findAvailableSlot(slots, iso, time))) dates.add(iso)
     }
     return dates
-  }, [busy, daysInMonth, month, today, year])
+  }, [daysInMonth, month, slots, today, year])
   const monthDays = useMemo(() => getMonthDays(year, month, availableDates), [availableDates, month, year])
-  const selectedSlotBusy = selectedDate && selectedTime ? isBusy(slotDate(selectedDate, selectedTime), 30, busy) : false
+  const selectedSlotUnavailable = selectedDate && selectedTime ? isPastSlot(selectedDate, selectedTime) || !findAvailableSlot(slots, selectedDate, selectedTime) : true
 
   const selectDate = (iso: string) => {
     setSelectedDate(iso)
@@ -154,13 +151,13 @@ export function SchedulePage() {
 
   const submitBooking = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!selectedDate || !selectedTime || selectedSlotBusy) return
+    if (!selectedDate || !selectedTime || selectedSlotUnavailable) return
     setBookingState("loading")
     setStatusMessage("")
-    const start = slotDate(selectedDate, selectedTime)
-    const end = new Date(start.getTime() + 30 * 60_000)
+    const slot = findAvailableSlot(slots, selectedDate, selectedTime)
+    if (!slot) return
     try {
-      const response = await fetch("/api/book", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ start: start.toISOString(), end: end.toISOString(), name: name.trim(), email: email.trim(), message: message.trim() }) })
+      const response = await fetch("/api/book", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ start: slot.start, end: slot.end, token: slot.token, name: name.trim(), email: email.trim(), message: message.trim() }) })
       if (response.status === 409) {
         setSelectedTime(null)
         setAvailabilityState("loading")
@@ -207,7 +204,7 @@ export function SchedulePage() {
           </section>
           <section aria-labelledby="schedule-times-title" className="border-t border-foreground/15 pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8">
             <h2 id="schedule-times-title" className="font-heading text-xl">Choose a time</h2>
-            {selectedDate ? <><p className="mt-2 text-sm text-muted-foreground">{formatDateLabel(selectedDate)}</p><div className="mt-5 grid gap-2">{schedulingData.timeSlots.map((time) => { const unavailable = isPastSlot(selectedDate, time) || isBusy(slotDate(selectedDate, time), 30, busy); return <button key={time} type="button" className={`schedule-modal-time border px-4 py-3 text-left text-sm ${selectedTime === time ? "border-foreground bg-foreground text-background" : "border-foreground/25 hover:border-foreground"} disabled:cursor-not-allowed disabled:opacity-35`} onClick={() => setSelectedTime(time)} disabled={unavailable || !availabilityReady} aria-pressed={selectedTime === time}>{time}{unavailable ? " · unavailable" : ""}</button> })}</div></> : <p className="mt-3 text-sm text-muted-foreground">Select an available date to see times.</p>}
+            {selectedDate ? <><p className="mt-2 text-sm text-muted-foreground">{formatDateLabel(selectedDate)}</p><div className="mt-5 grid gap-2">{schedulingData.timeSlots.map((time) => { const unavailable = isPastSlot(selectedDate, time) || !findAvailableSlot(slots, selectedDate, time); return <button key={time} type="button" className={`schedule-modal-time border px-4 py-3 text-left text-sm ${selectedTime === time ? "border-foreground bg-foreground text-background" : "border-foreground/25 hover:border-foreground"} disabled:cursor-not-allowed disabled:opacity-35`} onClick={() => setSelectedTime(time)} disabled={unavailable || !availabilityReady} aria-pressed={selectedTime === time}>{time}{unavailable ? " · unavailable" : ""}</button> })}</div></> : <p className="mt-3 text-sm text-muted-foreground">Select an available date to see times.</p>}
           </section>
         </div>
         <form className="booking-form mt-8 border-t border-foreground/15 pt-6" onSubmit={submitBooking}>
@@ -219,7 +216,7 @@ export function SchedulePage() {
           </div>
           {statusMessage ? <p className={`mt-4 text-sm ${bookingState === "success" ? "text-chart-1-text" : "text-muted-foreground"}`} role="status">{statusMessage}</p> : null}
           <div className="mt-5 flex flex-wrap items-center gap-4">
-            <button type="submit" className="schedule-modal-booking border border-foreground bg-foreground px-5 py-3 text-xs tracking-[0.18em] text-background hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40" disabled={!selectedDate || !selectedTime || selectedSlotBusy || !availabilityReady || bookingState === "loading" || bookingState === "success"}>{bookingState === "loading" ? "BOOKING…" : bookingState === "success" ? "BOOKED" : "BOOK THIS TIME"}</button>
+            <button type="submit" className="schedule-modal-booking border border-foreground bg-foreground px-5 py-3 text-xs tracking-[0.18em] text-background hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40" disabled={!selectedDate || !selectedTime || selectedSlotUnavailable || !availabilityReady || bookingState === "loading" || bookingState === "success"}>{bookingState === "loading" ? "BOOKING…" : bookingState === "success" ? "BOOKED" : "BOOK THIS TIME"}</button>
             {fallbackUrl ? <a className="text-xs tracking-[0.12em] text-muted-foreground underline underline-offset-4 hover:text-foreground" href={fallbackUrl} target="_blank" rel="noopener noreferrer">USE GOOGLE CALENDAR INSTEAD</a> : null}
             <a href="#/portfolio" className="text-xs tracking-[0.15em] text-muted-foreground underline underline-offset-4 hover:text-foreground">Back to portfolio</a>
           </div>
