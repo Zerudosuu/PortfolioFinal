@@ -35,6 +35,12 @@ If Google does not return a refresh token, revoke the app under the Google Accou
 
 ## 3. Configure Vercel
 
+Set the Vercel project's **Root Directory** to the repository root (`.`), not
+`client`. The API functions live in the root `api/` directory. The checked-in
+[`vercel.json`](../../vercel.json) builds the Vite app from `client/` while
+keeping the root API functions deployable. After changing Root Directory,
+redeploy the project.
+
 Add these environment variables in the Vercel project settings for every environment that serves bookings:
 
 | Variable | Value |
@@ -45,10 +51,16 @@ Add these environment variables in the Vercel project settings for every environ
 | `GOOGLE_OAUTH_ADMIN_KEY` | Long random value used only for `/api/google/start` |
 | `GOOGLE_CALENDAR_ID` | `primary` (or the target calendar ID) |
 | `BOOKING_TIMEZONE` | `Asia/Manila` |
+| `BOOKING_HOST_EMAIL` | `ronsalvador.m@gmail.com` so you receive the event invitation |
+| `BOOKING_SLOT_SECRET` | Long random value used to sign offered booking slots |
+| `BOOKING_START_HOUR` / `BOOKING_END_HOUR` | Local booking window, for example `9` and `17` |
+| `BOOKING_WEEKDAYS` | `1,2,3,4,5` for Monday through Friday |
 
 `GOOGLE_OAUTH_REDIRECT_URI` is optional. Set it to the exact deployed callback URL if the deployment uses a proxy or custom host that does not provide a reliable `Host` header. After changing environment variables, redeploy so the Vercel Functions receive the new values.
 
 The API accepts availability ranges of at most 62 days and booking durations from one through 120 minutes. It checks the calendar again immediately before creating an event, so a simultaneous booking receives a conflict response.
+
+The slot secret and schedule variables are required for the custom calendar UI. The API issues short-lived signed slots and rejects direct requests for times outside that schedule.
 
 ## Local verification
 
