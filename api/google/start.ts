@@ -1,5 +1,4 @@
 import { createHmac } from "node:crypto"
-import { google } from "googleapis"
 
 type Request = {
   query?: Record<string, string | string[] | undefined>
@@ -80,9 +79,17 @@ export default function handler(req: Request, res: Response): void {
     const clientSecret = environment("GOOGLE_CLIENT_SECRET")
     const adminKey = environment("GOOGLE_OAUTH_ADMIN_KEY")
     const redirectUri = callbackUrl(req)
-    const oauth = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
     const state = signedState(adminKey)
-    const url = oauth.generateAuthUrl({ access_type: "offline", prompt: "consent", scope: SCOPES, state })
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: "code",
+      access_type: "offline",
+      prompt: "consent",
+      scope: SCOPES.join(" "),
+      state,
+    })
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
     res.redirect(url)
   } catch (error) {
     const message = error instanceof Error ? error.message : "OAuth configuration error"

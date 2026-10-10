@@ -1,4 +1,3 @@
-import { google } from "googleapis"
 import { callbackUrl, hasValidState } from "./start"
 
 type Request = {
@@ -50,8 +49,21 @@ export default async function handler(req: Request, res: Response): Promise<void
       return
     }
 
-    const oauth = new google.auth.OAuth2(required("GOOGLE_CLIENT_ID"), required("GOOGLE_CLIENT_SECRET"), callbackUrl(req))
-    const { tokens } = await oauth.getToken(code)
+    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: required("GOOGLE_CLIENT_ID"),
+        client_secret: required("GOOGLE_CLIENT_SECRET"),
+        redirect_uri: callbackUrl(req),
+        grant_type: "authorization_code",
+      }),
+    })
+    const tokens = (await tokenResponse.json()) as { refresh_token?: string; error?: string; error_description?: string }
+    if (!tokenResponse.ok) {
+      throw new Error(tokens.error_description || tokens.error || "Google token exchange failed")
+    }
     if (!tokens.refresh_token) {
       res.status(400).send(page("No refresh token returned", "<p>Revoke this app in your Google Account and start again with consent.</p>"))
       return
