@@ -45,6 +45,10 @@ function slotDate(iso: string, time: string): Date {
   return new Date(`${iso}T${time}:00${BOOKING_OFFSET}`)
 }
 
+function formatTimeLabel(time: string): string {
+  return new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: BOOKING_TIMEZONE }).format(slotDate("2000-01-01", time))
+}
+
 function isPastSlot(iso: string, time: string): boolean {
   return slotDate(iso, time).getTime() <= Date.now()
 }
@@ -168,6 +172,9 @@ export function SchedulePage() {
       }
       if (!response.ok) throw new Error("Booking request failed")
       setBookingState("success")
+      setSelectedTime(null)
+      setAvailabilityState("loading")
+      setAvailabilityRevision((revision) => revision + 1)
       setStatusMessage("Your conversation is booked. A confirmation will be sent to your email.")
     } catch {
       setBookingState("error")
@@ -204,11 +211,11 @@ export function SchedulePage() {
           </section>
           <section aria-labelledby="schedule-times-title" className="border-t border-foreground/15 pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8">
             <h2 id="schedule-times-title" className="font-heading text-xl">Choose a time</h2>
-            {selectedDate ? <><p className="mt-2 text-sm text-muted-foreground">{formatDateLabel(selectedDate)}</p><div className="mt-5 grid gap-2">{schedulingData.timeSlots.map((time) => { const unavailable = isPastSlot(selectedDate, time) || !findAvailableSlot(slots, selectedDate, time); return <button key={time} type="button" className={`schedule-modal-time border px-4 py-3 text-left text-sm ${selectedTime === time ? "border-foreground bg-foreground text-background" : "border-foreground/25 hover:border-foreground"} disabled:cursor-not-allowed disabled:opacity-35`} onClick={() => setSelectedTime(time)} disabled={unavailable || !availabilityReady} aria-pressed={selectedTime === time}>{time}{unavailable ? " · unavailable" : ""}</button> })}</div></> : <p className="mt-3 text-sm text-muted-foreground">Select an available date to see times.</p>}
+            {selectedDate ? <><p className="mt-2 text-sm text-muted-foreground">{formatDateLabel(selectedDate)}</p><div className="mt-5 grid gap-2">{schedulingData.timeSlots.map((time) => { const unavailable = isPastSlot(selectedDate, time) || !findAvailableSlot(slots, selectedDate, time); return <button key={time} type="button" className={`schedule-modal-time border px-4 py-3 text-left text-sm ${selectedTime === time ? "border-foreground bg-foreground text-background" : "border-foreground/25 hover:border-foreground"} disabled:cursor-not-allowed disabled:opacity-35`} onClick={() => setSelectedTime(time)} disabled={unavailable || !availabilityReady} aria-pressed={selectedTime === time}>{formatTimeLabel(time)}{unavailable ? " · unavailable" : ""}</button> })}</div></> : <p className="mt-3 text-sm text-muted-foreground">Select an available date to see times.</p>}
           </section>
         </div>
         <form className="booking-form mt-8 border-t border-foreground/15 pt-6" onSubmit={submitBooking}>
-          {selectedDate && selectedTime ? <p className="text-sm">{formatDateLabel(selectedDate)} · {selectedTime} · {schedulingData.timezone}</p> : <p className="text-sm text-muted-foreground">Select a date and time to continue.</p>}
+          {selectedDate && selectedTime ? <p className="text-sm">{formatDateLabel(selectedDate)} · {formatTimeLabel(selectedTime)} · {schedulingData.timezone}</p> : <p className="text-sm text-muted-foreground">Select a date and time to continue.</p>}
           <div className="booking-fields mt-5 grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-xs tracking-[0.12em]">NAME<input required value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" className="booking-input" /></label>
             <label className="grid gap-2 text-xs tracking-[0.12em]">EMAIL<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" className="booking-input" /></label>
