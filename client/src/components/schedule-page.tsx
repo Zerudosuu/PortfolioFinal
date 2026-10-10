@@ -160,7 +160,14 @@ export function SchedulePage() {
     setBookingState("loading")
     setStatusMessage("")
     const slot = findAvailableSlot(slots, selectedDate, selectedTime)
-    if (!slot) return
+    if (!slot) {
+      setBookingState("conflict")
+      setStatusMessage("That time is no longer available. Choose another available slot.")
+      setSelectedTime(null)
+      setAvailabilityState("loading")
+      setAvailabilityRevision((revision) => revision + 1)
+      return
+    }
     try {
       const response = await fetch("/api/book", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ start: slot.start, end: slot.end, token: slot.token, name: name.trim(), email: email.trim(), message: message.trim() }) })
       if (response.status === 409) {
@@ -171,15 +178,18 @@ export function SchedulePage() {
         setStatusMessage("That time was just booked. Choose another available slot.")
         return
       }
-      if (!response.ok) throw new Error("Booking request failed")
+      if (!response.ok) {
+        const details = (await response.json().catch(() => null)) as { error?: string } | null
+        throw new Error(details?.error || "Booking request failed")
+      }
       setBookingState("success")
       setSelectedTime(null)
       setAvailabilityState("loading")
       setAvailabilityRevision((revision) => revision + 1)
       setStatusMessage("Your conversation is booked. A confirmation will be sent to your email.")
-    } catch {
+    } catch (error) {
       setBookingState("error")
-      setStatusMessage("Booking is temporarily unavailable. Use the Google Calendar link below or email Ron.")
+      setStatusMessage(error instanceof Error ? error.message : "Booking is temporarily unavailable. Use the Google Calendar link below or email Ron.")
     }
   }
 
