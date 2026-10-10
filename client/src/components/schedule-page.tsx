@@ -70,6 +70,11 @@ function initialMonth(): { year: number; month: number } {
   return { year: Number(parts.find((part) => part.type === "year")?.value), month: Number(parts.find((part) => part.type === "month")?.value) - 1 }
 }
 
+function manilaToday(): string {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: BOOKING_TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date())
+  return `${parts.find((part) => part.type === "year")?.value}-${parts.find((part) => part.type === "month")?.value}-${parts.find((part) => part.type === "day")?.value}`
+}
+
 export function SchedulePage() {
   const initial = initialMonth()
   const [year, setYear] = useState(initial.year)
@@ -77,6 +82,7 @@ export function SchedulePage() {
   const [busy, setBusy] = useState<BusyInterval[]>([])
   const [availabilityState, setAvailabilityState] = useState<"loading" | "ready" | "error">("loading")
   const [loadedMonth, setLoadedMonth] = useState<string | null>(null)
+  const [availabilityRevision, setAvailabilityRevision] = useState(0)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
   const [name, setName] = useState("")
@@ -87,6 +93,7 @@ export function SchedulePage() {
 
   const fallbackUrl = normalizeBookingUrl(schedulingData.bookingUrl) || googleBookingUrl(schedulingData.googleBookingUrl)
   const monthKey = `${year}-${month}`
+  const today = manilaToday()
   const monthStart = `${year}-${String(month + 1).padStart(2, "0")}-01T00:00:00${BOOKING_OFFSET}`
   const monthEndDate = new Date(year, month + 1, 0)
   const monthEnd = `${toIsoDate(monthEndDate)}T23:59:59${BOOKING_OFFSET}`
@@ -108,7 +115,7 @@ export function SchedulePage() {
         }
       })
     return () => controller.abort()
-  }, [monthKey, monthStart, monthEnd])
+  }, [availabilityRevision, monthKey, monthStart, monthEnd])
 
   const availabilityReady = loadedMonth === monthKey && availabilityState === "ready"
   const availabilityLoading = loadedMonth !== monthKey
@@ -119,10 +126,10 @@ export function SchedulePage() {
     const dates = new Set<string>()
     for (let day = 1; day <= daysInMonth; day += 1) {
       const iso = toIsoDate(new Date(year, month, day))
-      if (schedulingData.timeSlots.some((time) => !isBusy(slotDate(iso, time), 30, busy))) dates.add(iso)
+      if (iso >= today && schedulingData.timeSlots.some((time) => !isBusy(slotDate(iso, time), 30, busy))) dates.add(iso)
     }
     return dates
-  }, [busy, daysInMonth, month, year])
+  }, [busy, daysInMonth, month, today, year])
   const monthDays = useMemo(() => getMonthDays(year, month, availableDates), [availableDates, month, year])
   const selectedSlotBusy = selectedDate && selectedTime ? isBusy(slotDate(selectedDate, selectedTime), 30, busy) : false
 
@@ -151,6 +158,9 @@ export function SchedulePage() {
     try {
       const response = await fetch("/api/book", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ start: start.toISOString(), end: end.toISOString(), name: name.trim(), email: email.trim(), message: message.trim() }) })
       if (response.status === 409) {
+        setSelectedTime(null)
+        setAvailabilityState("loading")
+        setAvailabilityRevision((revision) => revision + 1)
         setBookingState("conflict")
         setStatusMessage("That time was just booked. Choose another available slot.")
         return
