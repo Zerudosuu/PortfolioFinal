@@ -45,6 +45,10 @@ function slotDate(iso: string, time: string): Date {
   return new Date(`${iso}T${time}:00${BOOKING_OFFSET}`)
 }
 
+function isPastSlot(iso: string, time: string): boolean {
+  return slotDate(iso, time).getTime() <= Date.now()
+}
+
 function isBusy(slot: Date, durationMinutes: number, busy: BusyInterval[]): boolean {
   const end = new Date(slot.getTime() + durationMinutes * 60_000)
   return busy.some((interval) => {
@@ -203,7 +207,7 @@ export function SchedulePage() {
           </section>
           <section aria-labelledby="schedule-times-title" className="border-t border-foreground/15 pt-6 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8">
             <h2 id="schedule-times-title" className="font-heading text-xl">Choose a time</h2>
-            {selectedDate ? <><p className="mt-2 text-sm text-muted-foreground">{formatDateLabel(selectedDate)}</p><div className="mt-5 grid gap-2">{schedulingData.timeSlots.map((time) => { const unavailable = isBusy(slotDate(selectedDate, time), 30, busy); return <button key={time} type="button" className={`schedule-modal-time border px-4 py-3 text-left text-sm ${selectedTime === time ? "border-foreground bg-foreground text-background" : "border-foreground/25 hover:border-foreground"} disabled:cursor-not-allowed disabled:opacity-35`} onClick={() => setSelectedTime(time)} disabled={unavailable || !availabilityReady} aria-pressed={selectedTime === time}>{time}{unavailable ? " · unavailable" : ""}</button> })}</div></> : <p className="mt-3 text-sm text-muted-foreground">Select an available date to see times.</p>}
+            {selectedDate ? <><p className="mt-2 text-sm text-muted-foreground">{formatDateLabel(selectedDate)}</p><div className="mt-5 grid gap-2">{schedulingData.timeSlots.map((time) => { const unavailable = isPastSlot(selectedDate, time) || isBusy(slotDate(selectedDate, time), 30, busy); return <button key={time} type="button" className={`schedule-modal-time border px-4 py-3 text-left text-sm ${selectedTime === time ? "border-foreground bg-foreground text-background" : "border-foreground/25 hover:border-foreground"} disabled:cursor-not-allowed disabled:opacity-35`} onClick={() => setSelectedTime(time)} disabled={unavailable || !availabilityReady} aria-pressed={selectedTime === time}>{time}{unavailable ? " · unavailable" : ""}</button> })}</div></> : <p className="mt-3 text-sm text-muted-foreground">Select an available date to see times.</p>}
           </section>
         </div>
         <form className="booking-form mt-8 border-t border-foreground/15 pt-6" onSubmit={submitBooking}>
