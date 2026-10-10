@@ -1,4 +1,4 @@
-import { allowedSlot, configuredCalendarService, HttpError, parseIsoDate, slotTokenFor, type CalendarService } from './_lib/google-calendar.ts'
+import { allowedSlot, configuredCalendarService, HttpError, parseIsoDate, slotTokenFor, type CalendarService } from './_lib/google-calendar.js'
 
 function errorResponse(error: unknown, res: any) { const e = error as Partial<HttpError>; return res.status(e.statusCode || 500).json({ error: e.statusCode ? e.message : 'Internal server error' }) }
 export function createAvailabilityHandler(service: CalendarService) {

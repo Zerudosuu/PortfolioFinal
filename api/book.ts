@@ -1,4 +1,4 @@
-import { allowedSlot, configuredCalendarService, HttpError, type CalendarService, validateBookingInput, verifySlotToken } from './_lib/google-calendar.ts'
+import { allowedSlot, configuredCalendarService, HttpError, type CalendarService, validateBookingInput, verifySlotToken } from './_lib/google-calendar.js'
 
 function overlaps(start: Date, end: Date, busy: Array<{ start: string; end: string }>) { return busy.some((item) => new Date(item.start) < end && new Date(item.end) > start) }
 function errorResponse(error: unknown, res: any) { const e = error as Partial<HttpError>; return res.status(e.statusCode || 500).json({ error: e.statusCode ? e.message : 'Internal server error' }) }
