@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from 'node:crypto'
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
 
 export class HttpError extends Error {
   statusCode: number
@@ -22,6 +22,7 @@ export class OAuth2Client {
 }
 
 export function calendarId(): string { return process.env.GOOGLE_CALENDAR_ID?.trim() || 'primary' }
+export function eventIdForSlot(start: string, end: string): string { return createHash('sha256').update(`portfolio-booking:${start}:${end}`).digest('hex') }
 
 function slotSecret(): string {
   const secret = process.env.BOOKING_SLOT_SECRET?.trim()
@@ -111,7 +112,7 @@ export function createGoogleCalendarService(client: OAuth2Client): CalendarServi
     const token = await client.getAccessToken()
     const response = await fetch(`https://www.googleapis.com/calendar/v3${path}`, { ...init, headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', ...(init.headers || {}) } })
     const body = await response.json() as any
-    if (!response.ok) throw new HttpError(502, body?.error?.message || 'Google Calendar request failed')
+    if (!response.ok) throw new HttpError(response.status === 409 ? 409 : 502, body?.error?.message || 'Google Calendar request failed')
     return body
   }
   return {
@@ -123,7 +124,8 @@ export function createGoogleCalendarService(client: OAuth2Client): CalendarServi
       const attendees = [{ email: input.email }]
       const hostEmail = process.env.BOOKING_HOST_EMAIL || process.env.GOOGLE_CALENDAR_OWNER_EMAIL
       if (hostEmail) attendees.push({ email: hostEmail })
-      const event = { summary: `Portfolio call with ${input.name}`, description: input.message, start: { dateTime: input.start.toISOString(), timeZone: process.env.BOOKING_TIMEZONE || 'Asia/Manila' }, end: { dateTime: input.end.toISOString(), timeZone: process.env.BOOKING_TIMEZONE || 'Asia/Manila' }, attendees }
+      const start = input.start.toISOString(); const end = input.end.toISOString()
+      const event = { id: eventIdForSlot(start, end), summary: `Portfolio call with ${input.name}`, description: input.message, start: { dateTime: start, timeZone: process.env.BOOKING_TIMEZONE || 'Asia/Manila' }, end: { dateTime: end, timeZone: process.env.BOOKING_TIMEZONE || 'Asia/Manila' }, attendees }
       return request(`/calendars/${encodeURIComponent(calendarId())}/events?sendUpdates=all`, { method: 'POST', body: JSON.stringify(event) })
     },
   }

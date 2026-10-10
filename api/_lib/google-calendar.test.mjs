@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { calendarId, validateBookingInput, getGoogleClient, slotTokenFor, verifySlotToken } from './google-calendar.ts'
+import { calendarId, validateBookingInput, getGoogleClient, slotTokenFor, verifySlotToken, eventIdForSlot } from './google-calendar.ts'
 
 const originalEnv = { ...process.env }
 test.afterEach(() => {
@@ -57,4 +57,10 @@ test('signs and verifies allowlisted slot tokens', () => {
   const token = slotTokenFor(start, end, Date.now() + 60_000)
   assert.deepEqual(verifySlotToken(token, start, end), { start, end })
   assert.throws(() => verifySlotToken(token, start, '2026-11-10T11:00:00.000Z'), /slot token/i)
+})
+
+test('derives the same valid Google event id for the same slot', () => {
+  const first = eventIdForSlot('2026-11-10T10:00:00.000Z', '2026-11-10T11:00:00.000Z')
+  assert.equal(first, eventIdForSlot('2026-11-10T10:00:00.000Z', '2026-11-10T11:00:00.000Z'))
+  assert.match(first, /^[a-f0-9]{64}$/)
 })

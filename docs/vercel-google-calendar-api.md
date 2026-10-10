@@ -14,3 +14,5 @@ Set these Vercel environment variables for production:
 - `BOOKING_MIN_LEAD_MINUTES` and `BOOKING_MAX_DAYS`: optional booking window limits.
 
 The current rate limiter is process-local and caps each client at 10 booking attempts per 10 minutes. This is a best-effort abuse control on Vercel's serverless runtime: instances do not share memory. Signed slot tokens, Google free/busy rechecks, and the 120-minute limit remain the authoritative booking protections. Use a shared Vercel-compatible store if stronger cross-instance rate limiting becomes necessary.
+
+Each event uses a deterministic SHA-256 Google event ID derived from the normalized slot start and end. Concurrent inserts for the same slot therefore collide at Google; the API maps Google's duplicate-event `409` response to the booking conflict response.
