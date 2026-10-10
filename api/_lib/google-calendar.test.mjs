@@ -59,8 +59,10 @@ test('signs and verifies allowlisted slot tokens', () => {
   assert.throws(() => verifySlotToken(token, start, '2026-11-10T11:00:00.000Z'), /slot token/i)
 })
 
-test('derives the same valid Google event id for the same slot', () => {
+test('derives unique valid Google event ids for the same slot', () => {
   const first = eventIdForSlot('2026-11-10T10:00:00.000Z', '2026-11-10T11:00:00.000Z')
-  assert.equal(first, eventIdForSlot('2026-11-10T10:00:00.000Z', '2026-11-10T11:00:00.000Z'))
-  assert.match(first, /^[a-f0-9]{64}$/)
+  const second = eventIdForSlot('2026-11-10T10:00:00.000Z', '2026-11-10T11:00:00.000Z')
+  assert.notEqual(first, second)
+  assert.match(first, /^[a-f0-9]{48}$/)
+  assert.match(second, /^[a-f0-9]{48}$/)
 })

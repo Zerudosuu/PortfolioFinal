@@ -15,4 +15,4 @@ Set these Vercel environment variables for production:
 
 The current rate limiter is process-local and caps each client at 10 booking attempts per 10 minutes. This is a best-effort abuse control on Vercel's serverless runtime: instances do not share memory. Signed slot tokens, Google free/busy rechecks, and the 120-minute limit remain the authoritative booking protections. Use a shared Vercel-compatible store if stronger cross-instance rate limiting becomes necessary.
 
-Each event uses a deterministic SHA-256 Google event ID derived from the normalized slot start and end. Concurrent inserts for the same slot therefore collide at Google; the API maps Google's duplicate-event `409` response to the booking conflict response.
+Each event uses a fresh Google event ID. Availability is rechecked immediately before insertion, so a slot deleted from Google becomes bookable again after the next availability refresh. The free/busy check remains the conflict protection for simultaneous requests.

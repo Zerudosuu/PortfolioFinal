@@ -1,4 +1,4 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
+import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto'
 
 export class HttpError extends Error {
   statusCode: number
@@ -22,7 +22,10 @@ export class OAuth2Client {
 }
 
 export function calendarId(): string { return process.env.GOOGLE_CALENDAR_ID?.trim() || 'primary' }
-export function eventIdForSlot(start: string, end: string): string { return createHash('sha256').update(`portfolio-booking:${start}:${end}`).digest('hex') }
+export function eventIdForSlot(start: string, end: string): string {
+  const slotPrefix = createHash('sha256').update(`portfolio-booking:${start}:${end}`).digest('hex').slice(0, 32)
+  return `${slotPrefix}${randomUUID().replaceAll('-', '').slice(0, 16)}`
+}
 
 function slotSecret(): string {
   const secret = process.env.BOOKING_SLOT_SECRET?.trim()
