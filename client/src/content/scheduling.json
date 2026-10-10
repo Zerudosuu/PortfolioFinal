@@ -11,5 +11,5 @@
   "weekdays": ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"],
   "months": ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"],
   "availableDates": ["2026-10-08", "2026-10-09", "2026-10-12", "2026-10-14", "2026-10-16", "2026-10-20", "2026-10-22"],
-  "timeSlots": ["09:00", "10:30", "13:00", "14:30", "16:00"]
+  "timeSlots": ["09:00", "10:30", "12:00", "13:00", "14:30", "16:00"]
 }
