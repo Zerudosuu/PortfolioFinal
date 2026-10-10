@@ -1,13 +1,17 @@
 import { ArrowUpRight } from "lucide-react"
 import { Mascot } from "page-mascot"
 import welcomeData from "../content/welcome.json"
+import { ThemeToggle } from "./theme-toggle"
 
 export function WelcomePage() {
   return (
     <main className="entry-page welcome-page">
       <header className="entry-header">
         <a className="entry-name" href="#/welcome" aria-label="Ron Salvador, welcome">Ron Salvador<span aria-hidden="true">.</span></a>
-        <span className="entry-location">Design & development / Manila</span>
+        <div className="flex items-center gap-4">
+          <span className="entry-location">Design & development / Manila</span>
+          <ThemeToggle />
+        </div>
       </header>
 
       <div className="welcome-layout">

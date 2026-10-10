@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import schedulingData from "../content/scheduling.json"
 import { googleBookingUrl } from "../lib/google-booking"
+import { ThemeToggle } from "./theme-toggle"
 
 type CalendarDate = { iso: string; day: number; inMonth: boolean; available: boolean }
 type AvailableSlot = { start: string; end: string; token: string }
@@ -186,7 +187,10 @@ export function SchedulePage() {
     <main className="entry-page booking-page">
       <header className="entry-header">
         <a className="entry-name" href="#/welcome">Ron Salvador<span aria-hidden="true">.</span></a>
-        <a className="entry-back" href="#/portfolio">View portfolio</a>
+        <div className="flex items-center gap-4">
+          <a className="entry-back" href="#/portfolio">View portfolio</a>
+          <ThemeToggle />
+        </div>
       </header>
       <div className="booking-content">
         <header>
