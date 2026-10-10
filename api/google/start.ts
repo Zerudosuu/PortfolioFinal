@@ -3,7 +3,6 @@ import { createHmac, timingSafeEqual } from "node:crypto"
 type Request = {
   method?: string
   body?: unknown
-  query?: Record<string, string | string[] | undefined>
   headers?: Record<string, string | string[] | undefined>
 }
 type Response = {
@@ -74,14 +73,10 @@ export default function handler(req: Request, res: Response): void {
   const bodyKey = typeof req.body === "object" && req.body !== null && "key" in req.body
     ? String((req.body as { key?: unknown }).key ?? "")
     : ""
-  const queryKey = single(req.query?.key)
-  const supplied = headerKey || (authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : "") || bodyKey || queryKey
+  const supplied = headerKey || (authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : "") || bodyKey
   if (!supplied) {
     res.status(401).json({ error: "Provide the OAuth admin key in X-Google-OAuth-Admin-Key, Authorization: Bearer, or POST body" })
     return
-  }
-  if (queryKey && !headerKey && !authorization && !bodyKey) {
-    res.setHeader("Warning", '299 - "Query admin keys can leak through logs; use X-Google-OAuth-Admin-Key"')
   }
   if (!secretsMatch(supplied, process.env.GOOGLE_OAUTH_ADMIN_KEY)) {
     res.status(403).json({ error: "Forbidden" })

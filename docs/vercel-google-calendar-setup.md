@@ -27,7 +27,7 @@ Invoke-WebRequest `
   -MaximumRedirection 0
 ```
 
-Follow the returned Google authorization URL in a browser. The legacy `?key=...` URL form remains supported for recovery, but query-string keys can leak through browser history and server logs.
+Follow the returned Google authorization URL in a browser. Query-string admin keys are rejected so credentials do not leak through browser history or server logs.
 
 Approve the requested scopes. The callback displays the refresh token once. Copy it directly into the Vercel `GOOGLE_REFRESH_TOKEN` variable and remove it from clipboard history, browser history, and any temporary notes. The token is never written to this repository.
 
