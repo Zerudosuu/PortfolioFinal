@@ -1,4 +1,4 @@
-import { callbackUrl, hasValidState } from "./start"
+import { callbackUrl, hasValidState } from "./start.js"
 
 type Request = {
   query?: Record<string, string | string[] | undefined>
