@@ -1,4 +1,4 @@
-import { callbackUrl, hasValidState } from "./start.js"
+import { callbackUrl, hasValidState } from "../_lib/google-oauth.js"
 
 type Request = {
   query?: Record<string, string | string[] | undefined>
