@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "node:crypto"
-import { callbackUrl, signedState } from "../_lib/google-oauth.js"
+import { callbackUrl, oauthSetupEnabled, signedState } from "../_lib/google-oauth.js"
 
 type Request = {
   method?: string
@@ -36,6 +36,11 @@ function secretsMatch(supplied: string, expected: string | undefined): boolean {
 }
 
 export default function handler(req: Request, res: Response): void {
+  res.setHeader("Cache-Control", "no-store")
+  if (!oauthSetupEnabled()) {
+    res.status(404).json({ error: "Not found" })
+    return
+  }
   const authorization = single(req.headers?.authorization)
   const headerKey = single(req.headers?.["x-google-oauth-admin-key"])
   const bodyKey = typeof req.body === "object" && req.body !== null && "key" in req.body

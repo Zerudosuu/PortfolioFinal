@@ -18,7 +18,7 @@ The redirect URI must match exactly, including protocol, host, path, and any cus
 
 ## 2. Generate the refresh token
 
-Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and a long random `GOOGLE_OAUTH_ADMIN_KEY` in Vercel for the **Production** environment, then redeploy. Start the flow while logged in as the calendar owner by sending the key in a header:
+Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, a long random `GOOGLE_OAUTH_ADMIN_KEY` and `OAUTH_SETUP_ENABLED=true` in Vercel for the **Production** environment, then redeploy. Without `OAUTH_SETUP_ENABLED=true` the `/api/google/*` endpoints return 404. **Once you have copied the refresh token, delete `OAUTH_SETUP_ENABLED` (and `GOOGLE_OAUTH_ADMIN_KEY`) and redeploy** to switch the bootstrap off again. Start the flow while logged in as the calendar owner by sending the key in a header:
 
 ```powershell
 Invoke-WebRequest `
@@ -55,6 +55,8 @@ Add these environment variables in the Vercel project settings for every environ
 | `BOOKING_SLOT_SECRET` | Long random value used to sign offered booking slots |
 | `BOOKING_START_HOUR` / `BOOKING_END_HOUR` | Local booking window, for example `9` and `17` |
 | `BOOKING_WEEKDAYS` | `1,2,3,4,5` for Monday through Friday |
+| `OAUTH_SETUP_ENABLED` | `true` only while generating the refresh token; remove afterwards |
+| `BOOKING_RATE_LIMIT` / `AVAILABILITY_RATE_LIMIT` | Optional per-client limits per 10 minutes (defaults `3` and `60`) |
 
 `GOOGLE_OAUTH_REDIRECT_URI` is optional. Set it to the exact deployed callback URL if the deployment uses a proxy or custom host that does not provide a reliable `Host` header. After changing environment variables, redeploy so the Vercel Functions receive the new values.
 
@@ -71,3 +73,9 @@ git ls-files -- '*.env*' '*refresh-token*' '*oauth-token*'
 ```
 
 The command should print no credential files. Use Vercel environment variables for deployed credentials and the existing Google booking-link fallback when API configuration is absent.
+
+## Abuse protection
+
+Each booking makes Google email an invite to the address the visitor typed, so treat `/api/book` as a mail-sending endpoint. The API caps name/message length, strips links and control characters, and rate-limits per client, but that limiter is per serverless instance. For a shared limit, add a Vercel Firewall rate-limit rule on `/api/book` (for example 5 requests per 10 minutes per IP) and consider a CAPTCHA such as Cloudflare Turnstile.
+
+Run the API tests with `node --import ./api/test-loader.mjs --test api/*.test.mjs api/_lib/*.test.mjs`.

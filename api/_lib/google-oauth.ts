@@ -10,6 +10,12 @@ function single(value: string | string[] | undefined): string {
   return Array.isArray(value) ? value[0] ?? "" : value ?? ""
 }
 
+// The OAuth bootstrap is a one-time setup step. Keep /api/google/* switched off
+// (404) unless OAUTH_SETUP_ENABLED=true is set while generating the refresh token.
+export function oauthSetupEnabled(): boolean {
+  return process.env.OAUTH_SETUP_ENABLED?.trim().toLowerCase() === "true"
+}
+
 export function callbackUrl(req: Request): string {
   if (process.env.GOOGLE_OAUTH_REDIRECT_URI?.trim()) {
     return process.env.GOOGLE_OAUTH_REDIRECT_URI.trim()
