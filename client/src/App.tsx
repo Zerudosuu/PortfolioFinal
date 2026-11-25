@@ -473,7 +473,7 @@ function ModalContent({
               {UI.socials.map((s) => {
                 const Icon = getIcon(s.icon)
                 return (
-                  <a key={s.label} href={s.href === "#" ? "#/portfolio" : s.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
+                  <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
                     {Icon && <Icon className="h-4 w-4" />}{s.label}
                   </a>
                 )
@@ -561,9 +561,8 @@ function ModalContent({
               Based in Manila. I design and build interfaces that feel inevitable — the kind where you forget someone made a decision. Available for senior IC and lead roles.
             </p>
             <div className="flex gap-4">
-              {[{ icon: <RiGithubLine className="h-4 w-4" />, label: "GITHUB" },
-                { icon: <RiLinkedinLine className="h-4 w-4" />, label: "LINKEDIN" }].map(({ icon, label }) => (
-                <a key={label} href="#/portfolio" className="flex items-center gap-2 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
+              {[{ icon: <RiLinkedinLine className="h-4 w-4" />, label: "LINKEDIN", href: "https://www.linkedin.com/in/ronald-salvador/" }].map(({ icon, label, href }) => (
+                <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
                   {icon}{label}
                 </a>
               ))}
@@ -902,15 +901,21 @@ function ProjectsPane() {
               </div>
             </div>
 
-            {/* links */}
-            <div className="mt-8 flex gap-3 pb-4">
-              <a href="#/portfolio" className="flex items-center gap-1.5 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
-                <RiGithubLine className="h-3.5 w-3.5" /> {UI.github}
-              </a>
-              <a href="#/portfolio" className="flex items-center gap-1.5 rounded-lg border border-chart-1/40 bg-chart-1/10 px-4 py-2 text-[12px] tracking-[0.1em] text-chart-1-text/80 transition-all hover:bg-chart-1/20">
-                <RiArrowRightUpLine className="h-3.5 w-3.5" /> {UI.live}
-              </a>
-            </div>
+            {/* links: only shown when the project has a real URL in projects.json */}
+            {(p.github || p.live) && (
+              <div className="mt-8 flex gap-3 pb-4">
+                {p.github && (
+                  <a href={p.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
+                    <RiGithubLine className="h-3.5 w-3.5" /> {UI.github}
+                  </a>
+                )}
+                {p.live && (
+                  <a href={p.live} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-lg border border-chart-1/40 bg-chart-1/10 px-4 py-2 text-[12px] tracking-[0.1em] text-chart-1-text/80 transition-all hover:bg-chart-1/20">
+                    <RiArrowRightUpLine className="h-3.5 w-3.5" /> {UI.live}
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
     </div>
@@ -1142,7 +1147,7 @@ function Portfolio() {
                 return (
                   <a
                     key={s.label}
-                    href={s.href === "#" ? "#/portfolio" : s.href}
+                    href={s.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
