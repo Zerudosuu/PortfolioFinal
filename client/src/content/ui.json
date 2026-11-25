@@ -5,7 +5,6 @@
   "github": "GITHUB",
   "live": "LIVE",
   "socials": [
-    { "label": "GITHUB", "icon": "github", "href": "#" },
     { "label": "LINKEDIN", "icon": "linkedin", "href": "https://www.linkedin.com/in/ronald-salvador/" }
   ]
 }

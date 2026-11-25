@@ -1,4 +1,4 @@
-import { callbackUrl, hasValidState } from "../_lib/google-oauth.js"
+import { callbackUrl, hasValidState, oauthSetupEnabled } from "../_lib/google-oauth.js"
 
 type Request = {
   query?: Record<string, string | string[] | undefined>
@@ -30,6 +30,15 @@ function page(title: string, body: string): string {
 
 export default async function handler(req: Request, res: Response): Promise<void> {
   res.setHeader("Content-Type", "text/html; charset=utf-8")
+  // This page can display a refresh token: never cache it, never leak it via Referer, never frame it.
+  res.setHeader("Cache-Control", "no-store")
+  res.setHeader("Referrer-Policy", "no-referrer")
+  res.setHeader("X-Robots-Tag", "noindex")
+  res.setHeader("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+  if (!oauthSetupEnabled()) {
+    res.status(404).send(page("Not found", ""))
+    return
+  }
   const error = single(req.query?.error)
   if (error) {
     res.status(400).send(page("Google authorization cancelled", `<p>${escapeHtml(error)}</p>`))

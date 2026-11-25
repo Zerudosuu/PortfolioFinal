@@ -231,9 +231,9 @@ export function SchedulePage() {
         <form className="booking-form mt-8 border-t border-foreground/15 pt-6" onSubmit={submitBooking}>
           {selectedDate && selectedTime ? <p className="text-sm">{formatDateLabel(selectedDate)} · {formatTimeLabel(selectedTime)} · {schedulingData.timezone}</p> : <p className="text-sm text-muted-foreground">Select a date and time to continue.</p>}
           <div className="booking-fields mt-5 grid gap-4 sm:grid-cols-2">
-            <label className="grid gap-2 text-xs tracking-[0.12em]">NAME<input required value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" className="booking-input" /></label>
-            <label className="grid gap-2 text-xs tracking-[0.12em]">EMAIL<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" className="booking-input" /></label>
-            <label className="grid gap-2 text-xs tracking-[0.12em] sm:col-span-2">MESSAGE <span className="text-muted-foreground">(OPTIONAL)</span><textarea value={message} onChange={(event) => setMessage(event.target.value)} rows={3} className="booking-input resize-y" /></label>
+            <label className="grid gap-2 text-xs tracking-[0.12em]">NAME<input required value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" maxLength={100} className="booking-input" /></label>
+            <label className="grid gap-2 text-xs tracking-[0.12em]">EMAIL<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" maxLength={254} className="booking-input" /></label>
+            <label className="grid gap-2 text-xs tracking-[0.12em] sm:col-span-2">MESSAGE <span className="text-muted-foreground">(OPTIONAL)</span><textarea value={message} onChange={(event) => setMessage(event.target.value)} rows={3} maxLength={1000} className="booking-input resize-y" /></label>
           </div>
           {statusMessage ? <p className={`mt-4 text-sm ${bookingState === "success" ? "text-chart-1-text" : "text-muted-foreground"}`} role="status">{statusMessage}</p> : null}
           <div className="mt-5 flex flex-wrap items-center gap-4">

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react"
 import { gsap } from "gsap"
 import { Mascot } from "page-mascot"
 import {
@@ -34,6 +34,11 @@ import skillsData from "@/content/skills.json"
 import uiData from "@/content/ui.json"
 import "@/responsive-grid.css"
 import "@/entry-pages.css"
+
+// Loaded on demand so the case study's figures and images stay out of the first page load.
+const PulseCaseStudy = React.lazy(() =>
+  import("@/components/case-study/PulseCaseStudy").then(m => ({ default: m.PulseCaseStudy })),
+)
 
 /* ── Content (edit text in client/src/content/*.json) ─────────── */
 
@@ -336,19 +341,21 @@ function CardModal({
   const backdropRef = useRef<HTMLDivElement>(null)
   const closingRef = useRef(false)
 
-  // FLIP values: where the modal starts (card center & scale) vs where it lands
-  const flip = useMemo(() => {
-    const mw = window.innerWidth  * 0.9
-    const mh = window.innerHeight * 0.9
-    const mx = window.innerWidth  * 0.05
-    const my = window.innerHeight * 0.05
+  // FLIP values: where the modal starts (card center & scale) vs where it lands.
+  // The landing size comes from the CSS (it changes by screen size), so it is measured
+  // from the real element rather than assumed.
+  const [flip, setFlip] = useState<{ tx: number; ty: number; sx: number; sy: number } | null>(null)
+  useLayoutEffect(() => {
+    const el = cardRef.current
+    if (!el) return
+    const { left: mx, top: my, width: mw, height: mh } = el.getBoundingClientRect()
     const { left: cl, top: ct, width: cw, height: ch } = modal.originRect
-    return {
+    setFlip({
       tx: (cl + cw / 2) - (mx + mw / 2),
       ty: (ct + ch / 2) - (my + mh / 2),
       sx: cw / mw,
       sy: ch / mh,
-    }
+    })
   }, [modal.originRect])
 
   // Close handler — triggers collapse tween, then unmounts
@@ -357,7 +364,7 @@ function CardModal({
     closingRef.current = true
     const el = cardRef.current
     const bd = backdropRef.current
-    if (!el) { onClose(); return }
+    if (!el || !flip) { onClose(); return }
     gsap.to(bd, { opacity: 0, duration: 0.22, ease: "power2.in" })
     gsap.to(el, {
       x: flip.tx, y: flip.ty, scaleX: flip.sx, scaleY: flip.sy,
@@ -380,11 +387,11 @@ function CardModal({
     return () => { document.body.style.overflow = "" }
   }, [])
 
-  // Expand tween on mount
-  useEffect(() => {
+  // Expand tween on mount (layout effect so the card never paints at full size first)
+  useLayoutEffect(() => {
     const el = cardRef.current
     const bd = backdropRef.current
-    if (!el) return
+    if (!el || !flip) return
     // Start at card position
     gsap.set(el, { x: flip.tx, y: flip.ty, scaleX: flip.sx, scaleY: flip.sy, opacity: 0, borderRadius: "16px" })
     gsap.set(bd, { opacity: 0 })
@@ -466,7 +473,7 @@ function ModalContent({
               {UI.socials.map((s) => {
                 const Icon = getIcon(s.icon)
                 return (
-                  <a key={s.label} href={s.href === "#" ? "#/portfolio" : s.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
+                  <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
                     {Icon && <Icon className="h-4 w-4" />}{s.label}
                   </a>
                 )
@@ -554,9 +561,8 @@ function ModalContent({
               Based in Manila. I design and build interfaces that feel inevitable — the kind where you forget someone made a decision. Available for senior IC and lead roles.
             </p>
             <div className="flex gap-4">
-              {[{ icon: <RiGithubLine className="h-4 w-4" />, label: "GITHUB" },
-                { icon: <RiLinkedinLine className="h-4 w-4" />, label: "LINKEDIN" }].map(({ icon, label }) => (
-                <a key={label} href="#/portfolio" className="flex items-center gap-2 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
+              {[{ icon: <RiLinkedinLine className="h-4 w-4" />, label: "LINKEDIN", href: "https://www.linkedin.com/in/ronald-salvador/" }].map(({ icon, label, href }) => (
+                <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
                   {icon}{label}
                 </a>
               ))}
@@ -803,20 +809,19 @@ function ProjectsPane() {
   const p = PROJECTS[selected]
 
   return (
-    <div className="flex h-full gap-0 overflow-hidden px-7 py-8">
-      {/* ── Left: project list ──────────────────────────────── */}
+    <div className="flex h-full min-w-0 flex-col gap-0 overflow-hidden px-4 py-4 md:flex-row md:px-7 md:py-8">
+      {/* ── Left: project list (a swipeable row on phones, a column from tablet up) ── */}
       <div
         ref={listRef}
-        className="flex h-full w-full shrink-0 flex-col overflow-y-auto pr-2 transition-all duration-300"
-        style={{ width: "38%", minWidth: 240 }}
+        className="flex w-full shrink-0 flex-col md:h-full md:w-[38%] md:min-w-[240px] md:max-w-[380px] md:overflow-y-auto md:pr-2"
       >
-        <h2 className="mb-6 text-[28px] font-extrabold tracking-tight">{projectsData.modalTitle}</h2>
-        <div className="space-y-3">
+        <h2 className="mb-6 hidden text-[28px] font-extrabold tracking-tight md:block">{projectsData.modalTitle}</h2>
+        <div className="flex gap-3 overflow-x-auto pb-1 md:block md:space-y-3 md:overflow-visible md:pb-0">
           {PROJECTS.map((proj, i) => (
             <button
               key={i}
               onClick={() => openDetail(i)}
-              className={`group w-full rounded-2xl border p-5 text-left transition-all duration-200
+              className={`group w-[230px] shrink-0 rounded-2xl border p-4 text-left transition-all duration-200 md:w-full md:p-5
                 ${selected === i
                   ? "border-chart-1/50 bg-chart-1/8 shadow-[0_0_0_1px_oklch(0.837_0.128_66.29/0.15)]"
                   : "border-border/70 bg-muted/10 hover:border-chart-1/30 hover:bg-chart-1/5"}`}
@@ -841,11 +846,10 @@ function ProjectsPane() {
       </div>
 
       {/* ── Right: detail panel — always visible ── */}
-      <div className="mx-5 w-px shrink-0 bg-border/40" />
+      <div className="my-3 h-px w-full shrink-0 bg-border/40 md:mx-5 md:my-0 md:h-auto md:w-px" />
       <div
         ref={detailRef}
-        className="flex h-full flex-col overflow-hidden"
-        style={{ width: "62%" }}
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
       >
           {/* detail header */}
           <div className="mb-5 flex items-start justify-between">
@@ -862,20 +866,28 @@ function ProjectsPane() {
 
           {/* scrollable detail content */}
           <div className="flex-1 overflow-y-auto overscroll-contain pr-1">
-            {/* project image placeholder */}
-            <div className={`mb-6 h-48 w-full rounded-xl ${p.accent.replace("bg-", "bg-").replace("500", "500/15")} border border-border/40 flex items-center justify-center`}>
-              <span className={`text-[12px] font-medium tracking-widest ${p.accent.replace("bg-", "text-")}/70`}>
-                {UI.projectPreview}
-              </span>
-            </div>
+            {"caseStudy" in p && p.caseStudy === "pulse" ? (
+              <React.Suspense fallback={<div className="h-48 w-full animate-pulse rounded-xl bg-muted/40" />}>
+                <PulseCaseStudy />
+              </React.Suspense>
+            ) : (
+              <>
+                {/* project image placeholder */}
+                <div className={`mb-6 h-48 w-full rounded-xl ${p.accent.replace("bg-", "bg-").replace("500", "500/15")} border border-border/40 flex items-center justify-center`}>
+                  <span className={`text-[12px] font-medium tracking-widest ${p.accent.replace("bg-", "text-")}/70`}>
+                    {UI.projectPreview}
+                  </span>
+                </div>
 
-            <p className="text-[13px] italic leading-relaxed text-foreground/50 border-l-2 border-chart-1/40 pl-4 mb-6">
-              {p.desc}
-            </p>
+                <p className="text-[13px] italic leading-relaxed text-foreground/50 border-l-2 border-chart-1/40 pl-4 mb-6">
+                  {p.desc}
+                </p>
 
-            <div className="space-y-5 text-[13px] leading-relaxed text-foreground/65">
-              <p>{p.full}</p>
-            </div>
+                <div className="space-y-5 text-[13px] leading-relaxed text-foreground/65">
+                  <p>{p.full}</p>
+                </div>
+              </>
+            )}
 
             {/* tech stack pills */}
             <div className="mt-6">
@@ -889,15 +901,21 @@ function ProjectsPane() {
               </div>
             </div>
 
-            {/* links */}
-            <div className="mt-8 flex gap-3 pb-4">
-              <a href="#/portfolio" className="flex items-center gap-1.5 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
-                <RiGithubLine className="h-3.5 w-3.5" /> {UI.github}
-              </a>
-              <a href="#/portfolio" className="flex items-center gap-1.5 rounded-lg border border-chart-1/40 bg-chart-1/10 px-4 py-2 text-[12px] tracking-[0.1em] text-chart-1-text/80 transition-all hover:bg-chart-1/20">
-                <RiArrowRightUpLine className="h-3.5 w-3.5" /> {UI.live}
-              </a>
-            </div>
+            {/* links: only shown when the project has a real URL in projects.json */}
+            {(p.github || p.live) && (
+              <div className="mt-8 flex gap-3 pb-4">
+                {p.github && (
+                  <a href={p.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-lg border border-border/60 px-4 py-2 text-[12px] tracking-[0.1em] text-foreground/50 transition-all hover:border-chart-1/50 hover:text-foreground">
+                    <RiGithubLine className="h-3.5 w-3.5" /> {UI.github}
+                  </a>
+                )}
+                {p.live && (
+                  <a href={p.live} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-lg border border-chart-1/40 bg-chart-1/10 px-4 py-2 text-[12px] tracking-[0.1em] text-chart-1-text/80 transition-all hover:bg-chart-1/20">
+                    <RiArrowRightUpLine className="h-3.5 w-3.5" /> {UI.live}
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
     </div>
@@ -1058,14 +1076,22 @@ function Portfolio() {
           <div className="relative mx-4 mt-4 flex-1 overflow-hidden rounded-lg">
             <div
               key={projectIdx}
-              className={`absolute inset-0 rounded-lg bg-muted/40 project-slide-in-${slideDir}`}
+              className={`absolute inset-0 overflow-hidden rounded-lg bg-muted/40 project-slide-in-${slideDir}`}
               onAnimationEnd={() => { setSliding(false); setPrevIdx(null) }}
-            />
+            >
+              {"cover" in project && project.cover && (
+                <img src={project.cover} alt="" className="h-full w-full object-cover object-left-top" />
+              )}
+            </div>
             {prevIdx !== null && (
               <div
                 key={`prev-${prevIdx}`}
-                className={`absolute inset-0 rounded-lg bg-muted/40 project-slide-out-${slideDir}`}
-              />
+                className={`absolute inset-0 overflow-hidden rounded-lg bg-muted/40 project-slide-out-${slideDir}`}
+              >
+                {"cover" in PROJECTS[prevIdx] && PROJECTS[prevIdx].cover && (
+                  <img src={PROJECTS[prevIdx].cover} alt="" className="h-full w-full object-cover object-left-top" />
+                )}
+              </div>
             )}
           </div>
 
@@ -1121,7 +1147,7 @@ function Portfolio() {
                 return (
                   <a
                     key={s.label}
-                    href={s.href === "#" ? "#/portfolio" : s.href}
+                    href={s.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 
 export type PixelSwapPattern =
@@ -266,8 +266,11 @@ export function PixelSwap({
   const config = { duration, pixelDuration, pixelSpin, pixelScale, pixelRadius, fade, easing, onComplete };
   const configRef = useRef(config);
   const gridRef = useRef(grid);
-  configRef.current = config;
-  gridRef.current = grid;
+  // Refresh the latest values after render (not during it), before any effect below reads them.
+  useLayoutEffect(() => {
+    configRef.current = config;
+    gridRef.current = grid;
+  });
 
   useEffect(() => {
     const container = containerRef.current;

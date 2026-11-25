@@ -3,12 +3,38 @@
   "modalTitle": "Projects",
   "items": [
     {
+      "name": "Pulse",
+      "desc": "A Jira productivity dashboard that shows every role its own numbers, with no JQL needed.",
+      "tag": "Ops Dashboard",
+      "accent": "bg-orange-500",
+      "caseStudy": "pulse",
+      "cover": "/case-studies/pulse/screens/team-lead-dashboard.webp",
+      "full": "Replaced hand-built Excel reports with a dashboard for each role. Saves each team lead roughly 3–5 hours a week, for about 100 regular users across 10–20 teams, on infrastructure that costs nothing to run.",
+      "stack": [
+        "React",
+        "TypeScript",
+        "Express",
+        "PostgreSQL",
+        "Recharts"
+      ],
+      "github": null,
+      "live": null
+    },
+    {
       "name": "Meridian Ledger",
       "desc": "A treasury dashboard that makes cash flow legible at a glance.",
       "tag": "Dashboard",
       "accent": "bg-amber-500",
       "full": "Built with React, TypeScript, and Recharts. Features real-time cash flow tracking, multi-account aggregation, and a custom charting layer that handles irregular payment cadences without visual noise. Delivered in 6 weeks for a Series B fintech.",
-      "stack": ["React", "TypeScript", "Recharts", "Tailwind", "Vite"]
+      "stack": [
+        "React",
+        "TypeScript",
+        "Recharts",
+        "Tailwind",
+        "Vite"
+      ],
+      "github": null,
+      "live": null
     },
     {
       "name": "Nova Design System",
@@ -16,15 +42,15 @@
       "tag": "Design System",
       "accent": "bg-violet-500",
       "full": "A token-first design system spanning 80+ components across 3 product surfaces. Built with Tailwind, Radix, and Storybook. Reduced cross-team design inconsistencies by 60% in the first quarter after adoption.",
-      "stack": ["Tailwind", "Radix UI", "Storybook", "TypeScript", "Figma"]
-    },
-    {
-      "name": "Pulse Analytics",
-      "desc": "Real-time data visualisation platform for fintech operations teams.",
-      "tag": "Data Viz",
-      "accent": "bg-sky-500",
-      "full": "WebSocket-driven dashboard with 15+ chart types, drill-down capabilities, and a configurable alert engine. Handles 10k+ events per second in the browser using a rolling buffer architecture with React, D3, and a custom render scheduler.",
-      "stack": ["React", "D3", "WebSockets", "TypeScript", "Node.js"]
+      "stack": [
+        "Tailwind",
+        "Radix UI",
+        "Storybook",
+        "TypeScript",
+        "Figma"
+      ],
+      "github": null,
+      "live": null
     }
   ]
 }

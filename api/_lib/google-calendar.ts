@@ -97,12 +97,31 @@ export function validateBookingInput(value: unknown): { start: Date; end: Date; 
   const maximumStart = Date.now() + Number(process.env.BOOKING_MAX_DAYS || 62) * 24 * 60 * 60 * 1000
   if (start.getTime() < minimumStart) throw new HttpError(400, 'Booking start cannot be in the past')
   if (start.getTime() > maximumStart) throw new HttpError(400, 'Booking start is outside the booking window')
-  const name = typeof body.name === 'string' ? body.name.trim() : ''
+  const name = typeof body.name === 'string' ? cleanText(body.name) : ''
   if (!name) throw new HttpError(400, 'name is required')
+  if (name.length > MAX_NAME_LENGTH) throw new HttpError(400, `name cannot exceed ${MAX_NAME_LENGTH} characters`)
+  // The name becomes the invite subject that Google emails to the guest, so keep links out of it.
+  if (LINK_PATTERN.test(name)) throw new HttpError(400, 'name cannot contain links')
   const email = typeof body.email === 'string' ? body.email.trim() : ''
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError(400, 'email is invalid')
-  const message = typeof body.message === 'string' ? body.message.trim() : ''
-  return { start, end, name, email, message }
+  if (email.length > MAX_EMAIL_LENGTH || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError(400, 'email is invalid')
+  const message = typeof body.message === 'string' ? cleanText(body.message, true) : ''
+  if (message.length > MAX_MESSAGE_LENGTH) throw new HttpError(400, `message cannot exceed ${MAX_MESSAGE_LENGTH} characters`)
+  // Google sends the description in the invite email; strip links so the form can't be used to mail phishing URLs.
+  return { start, end, name, email, message: message.replace(LINK_PATTERN_GLOBAL, '[link removed]') }
+}
+
+export const MAX_NAME_LENGTH = 100
+export const MAX_EMAIL_LENGTH = 254
+export const MAX_MESSAGE_LENGTH = 1000
+const LINK_SOURCE = String.raw`(?:[a-z][a-z0-9+.-]*:\/\/|www\.)\S+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|io|co|ru|xyz|top|info|biz|link|site|online|app|dev|me|ly|gl|cc|tk)\b(?:\/\S*)?`
+const LINK_PATTERN = new RegExp(LINK_SOURCE, 'i')
+const LINK_PATTERN_GLOBAL = new RegExp(LINK_SOURCE, 'gi')
+
+function cleanText(value: string, multiline = false): string {
+  // Drop control/format characters (incl. bidi overrides); keep newlines in the message only.
+  const controls = multiline ? /[\u0000-\u0009\u000B-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g : /[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g
+  const stripped = value.replace(controls, '')
+  return (multiline ? stripped : stripped.replace(/\s+/g, ' ')).trim()
 }
 
 export type CalendarService = {
@@ -115,7 +134,11 @@ export function createGoogleCalendarService(client: OAuth2Client): CalendarServi
     const token = await client.getAccessToken()
     const response = await fetch(`https://www.googleapis.com/calendar/v3${path}`, { ...init, headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', ...(init.headers || {}) } })
     const body = await response.json() as any
-    if (!response.ok) throw new HttpError(response.status === 409 ? 409 : 502, body?.error?.message || 'Google Calendar request failed')
+    if (!response.ok) {
+      // Log Google's details server-side only; never echo them to the public client.
+      console.error('Google Calendar request failed', response.status, body?.error?.message)
+      throw new HttpError(response.status === 409 ? 409 : 502, response.status === 409 ? 'That time is no longer available' : 'Calendar is temporarily unavailable')
+    }
     return body
   }
   return {
