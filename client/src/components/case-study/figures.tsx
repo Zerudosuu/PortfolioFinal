@@ -105,7 +105,7 @@ const KPI_STEPS = [
 /** Figure: KPI data flow, shown as a simple pipeline. */
 export function KpiFlowFigure() {
   return (
-    <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <ol className="grid gap-3 @lg:grid-cols-2 @3xl:grid-cols-3">
       {KPI_STEPS.map(([n, title, body]) => (
         <li key={n} className="rounded-xl border border-border/70 bg-card p-4">
           <div className="flex items-center gap-2">
@@ -130,7 +130,7 @@ const AUTH_STEPS = [
 /** Figure: authentication flow. */
 export function AuthFlowFigure() {
   return (
-    <ol className="grid gap-3 md:grid-cols-5">
+    <ol className="grid gap-3 @lg:grid-cols-2 @4xl:grid-cols-5">
       {AUTH_STEPS.map(([title, body], i) => (
         <li key={title} className="relative rounded-xl border border-border/70 bg-card p-4">
           <span className="text-[11px] font-bold tracking-widest text-chart-1-text">STEP {i + 1}</span>

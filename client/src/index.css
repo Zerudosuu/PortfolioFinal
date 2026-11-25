@@ -164,7 +164,25 @@
   left: 5vw;
   width: 90vw;
   height: 90vh;
+  /* dvh tracks the visible height on phones, where the browser bar comes and goes */
+  height: 90dvh;
+  max-width: 1280px;
   will-change: transform, opacity;
+}
+
+/* Centre the card once the 1280px cap kicks in, so wide screens don't leave it hugging the left. */
+@media (min-width: 1423px) {
+  .modal-card { left: calc(50vw - 640px); }
+}
+
+/* Phones: use nearly the full screen so content isn't squeezed into a narrow frame. */
+@media (max-width: 640px) {
+  .modal-card {
+    top: 2dvh;
+    left: 2vw;
+    width: 96vw;
+    height: 96dvh;
+  }
 }
 
 /* ── Portfolio animations ───────────────────────────────────── */

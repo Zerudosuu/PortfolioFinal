@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react"
 import { gsap } from "gsap"
 import { Mascot } from "page-mascot"
 import {
@@ -341,19 +341,21 @@ function CardModal({
   const backdropRef = useRef<HTMLDivElement>(null)
   const closingRef = useRef(false)
 
-  // FLIP values: where the modal starts (card center & scale) vs where it lands
-  const flip = useMemo(() => {
-    const mw = window.innerWidth  * 0.9
-    const mh = window.innerHeight * 0.9
-    const mx = window.innerWidth  * 0.05
-    const my = window.innerHeight * 0.05
+  // FLIP values: where the modal starts (card center & scale) vs where it lands.
+  // The landing size comes from the CSS (it changes by screen size), so it is measured
+  // from the real element rather than assumed.
+  const [flip, setFlip] = useState<{ tx: number; ty: number; sx: number; sy: number } | null>(null)
+  useLayoutEffect(() => {
+    const el = cardRef.current
+    if (!el) return
+    const { left: mx, top: my, width: mw, height: mh } = el.getBoundingClientRect()
     const { left: cl, top: ct, width: cw, height: ch } = modal.originRect
-    return {
+    setFlip({
       tx: (cl + cw / 2) - (mx + mw / 2),
       ty: (ct + ch / 2) - (my + mh / 2),
       sx: cw / mw,
       sy: ch / mh,
-    }
+    })
   }, [modal.originRect])
 
   // Close handler — triggers collapse tween, then unmounts
@@ -362,7 +364,7 @@ function CardModal({
     closingRef.current = true
     const el = cardRef.current
     const bd = backdropRef.current
-    if (!el) { onClose(); return }
+    if (!el || !flip) { onClose(); return }
     gsap.to(bd, { opacity: 0, duration: 0.22, ease: "power2.in" })
     gsap.to(el, {
       x: flip.tx, y: flip.ty, scaleX: flip.sx, scaleY: flip.sy,
@@ -385,11 +387,11 @@ function CardModal({
     return () => { document.body.style.overflow = "" }
   }, [])
 
-  // Expand tween on mount
-  useEffect(() => {
+  // Expand tween on mount (layout effect so the card never paints at full size first)
+  useLayoutEffect(() => {
     const el = cardRef.current
     const bd = backdropRef.current
-    if (!el) return
+    if (!el || !flip) return
     // Start at card position
     gsap.set(el, { x: flip.tx, y: flip.ty, scaleX: flip.sx, scaleY: flip.sy, opacity: 0, borderRadius: "16px" })
     gsap.set(bd, { opacity: 0 })
@@ -808,20 +810,19 @@ function ProjectsPane() {
   const p = PROJECTS[selected]
 
   return (
-    <div className="flex h-full min-w-0 flex-col gap-0 overflow-hidden px-5 py-6 sm:flex-row sm:px-7 sm:py-8">
-      {/* ── Left: project list ──────────────────────────────── */}
+    <div className="flex h-full min-w-0 flex-col gap-0 overflow-hidden px-4 py-4 md:flex-row md:px-7 md:py-8">
+      {/* ── Left: project list (a swipeable row on phones, a column from tablet up) ── */}
       <div
         ref={listRef}
-        className="flex w-full shrink-0 flex-col overflow-y-auto pr-2 transition-all duration-300 max-h-[32%] sm:h-full sm:max-h-none"
-        style={{ minWidth: 0 }}
+        className="flex w-full shrink-0 flex-col md:h-full md:w-[38%] md:min-w-[240px] md:max-w-[380px] md:overflow-y-auto md:pr-2"
       >
-        <h2 className="mb-6 text-[28px] font-extrabold tracking-tight">{projectsData.modalTitle}</h2>
-        <div className="space-y-3">
+        <h2 className="mb-6 hidden text-[28px] font-extrabold tracking-tight md:block">{projectsData.modalTitle}</h2>
+        <div className="flex gap-3 overflow-x-auto pb-1 md:block md:space-y-3 md:overflow-visible md:pb-0">
           {PROJECTS.map((proj, i) => (
             <button
               key={i}
               onClick={() => openDetail(i)}
-              className={`group w-full rounded-2xl border p-5 text-left transition-all duration-200
+              className={`group w-[230px] shrink-0 rounded-2xl border p-4 text-left transition-all duration-200 md:w-full md:p-5
                 ${selected === i
                   ? "border-chart-1/50 bg-chart-1/8 shadow-[0_0_0_1px_oklch(0.837_0.128_66.29/0.15)]"
                   : "border-border/70 bg-muted/10 hover:border-chart-1/30 hover:bg-chart-1/5"}`}
@@ -846,10 +847,10 @@ function ProjectsPane() {
       </div>
 
       {/* ── Right: detail panel — always visible ── */}
-      <div className="my-4 h-px w-full shrink-0 bg-border/40 sm:mx-5 sm:my-0 sm:h-auto sm:w-px" />
+      <div className="my-3 h-px w-full shrink-0 bg-border/40 md:mx-5 md:my-0 md:h-auto md:w-px" />
       <div
         ref={detailRef}
-        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden sm:h-full"
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
       >
           {/* detail header */}
           <div className="mb-5 flex items-start justify-between">
@@ -1070,14 +1071,22 @@ function Portfolio() {
           <div className="relative mx-4 mt-4 flex-1 overflow-hidden rounded-lg">
             <div
               key={projectIdx}
-              className={`absolute inset-0 rounded-lg bg-muted/40 project-slide-in-${slideDir}`}
+              className={`absolute inset-0 overflow-hidden rounded-lg bg-muted/40 project-slide-in-${slideDir}`}
               onAnimationEnd={() => { setSliding(false); setPrevIdx(null) }}
-            />
+            >
+              {"cover" in project && project.cover && (
+                <img src={project.cover} alt="" className="h-full w-full object-cover object-left-top" />
+              )}
+            </div>
             {prevIdx !== null && (
               <div
                 key={`prev-${prevIdx}`}
-                className={`absolute inset-0 rounded-lg bg-muted/40 project-slide-out-${slideDir}`}
-              />
+                className={`absolute inset-0 overflow-hidden rounded-lg bg-muted/40 project-slide-out-${slideDir}`}
+              >
+                {"cover" in PROJECTS[prevIdx] && PROJECTS[prevIdx].cover && (
+                  <img src={PROJECTS[prevIdx].cover} alt="" className="h-full w-full object-cover object-left-top" />
+                )}
+              </div>
             )}
           </div>
 

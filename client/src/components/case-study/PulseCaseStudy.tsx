@@ -31,7 +31,7 @@ const BASE = "/case-studies/pulse/screens/"
 
 export function PulseCaseStudy() {
   return (
-    <article className="text-foreground">
+    <article className="@container text-foreground">
       {/* ── Solution first ─────────────────────────────────────── */}
       <header className="rounded-2xl border border-chart-1/40 bg-chart-1/10 p-6 sm:p-8">
         <p className={LABEL}>Case study · Operations dashboard</p>
@@ -41,20 +41,20 @@ export function PulseCaseStudy() {
           Replaced hand-built Excel reports and saves each team lead roughly 3–5 hours a week.
         </p>
 
-        <dl className="mt-6 grid gap-4 sm:grid-cols-3">
+        <dl className="mt-6 grid gap-3 @xl:grid-cols-3">
           <div className="rounded-xl border border-border/60 bg-card/70 p-4">
             <dt className={LABEL}>Time saved</dt>
-            <dd className="mt-2 text-[22px] font-bold">3–5 hrs / week</dd>
+            <dd className="mt-2 text-[18px] font-bold leading-snug @xl:text-[20px]">3–5 hrs / week</dd>
             <dd className="mt-1 text-[12px] text-foreground/55">per team lead, on manual reporting (estimate)</dd>
           </div>
           <div className="rounded-xl border border-border/60 bg-card/70 p-4">
             <dt className={LABEL}>Used by</dt>
-            <dd className="mt-2 text-[22px] font-bold">~100 regular users</dd>
+            <dd className="mt-2 text-[18px] font-bold leading-snug @xl:text-[20px]">~100 regular users</dd>
             <dd className="mt-1 text-[12px] text-foreground/55">across 10–20 teams, in an org of up to 400</dd>
           </div>
           <div className="rounded-xl border border-border/60 bg-card/70 p-4">
             <dt className={LABEL}>Running cost</dt>
-            <dd className="mt-2 text-[22px] font-bold">$0 / month</dd>
+            <dd className="mt-2 text-[18px] font-bold leading-snug @xl:text-[20px]">$0 / month</dd>
             <dd className="mt-1 text-[12px] text-foreground/55">free-tier hosting and database</dd>
           </div>
         </dl>
@@ -105,7 +105,7 @@ export function PulseCaseStudy() {
         <Figure caption="Commits per month. The bars are the build phase in August and the smaller iteration phase after it.">
           <CommitsChart />
         </Figure>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <div className="mt-6 grid gap-4 @lg:grid-cols-2">
           <div className="rounded-xl border border-border/70 bg-card p-4">
             <p className={LABEL}>Frontend</p>
             <p className="mt-2 text-[13px] leading-relaxed text-foreground/75">React 18, TypeScript, Vite, Tailwind CSS, Radix UI, Recharts, React Query, Zustand</p>
