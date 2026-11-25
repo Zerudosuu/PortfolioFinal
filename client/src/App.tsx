@@ -35,6 +35,11 @@ import uiData from "@/content/ui.json"
 import "@/responsive-grid.css"
 import "@/entry-pages.css"
 
+// Loaded on demand so the case study's figures and images stay out of the first page load.
+const PulseCaseStudy = React.lazy(() =>
+  import("@/components/case-study/PulseCaseStudy").then(m => ({ default: m.PulseCaseStudy })),
+)
+
 /* ── Content (edit text in client/src/content/*.json) ─────────── */
 
 const UI = uiData
@@ -803,12 +808,12 @@ function ProjectsPane() {
   const p = PROJECTS[selected]
 
   return (
-    <div className="flex h-full gap-0 overflow-hidden px-7 py-8">
+    <div className="flex h-full min-w-0 flex-col gap-0 overflow-hidden px-5 py-6 sm:flex-row sm:px-7 sm:py-8">
       {/* ── Left: project list ──────────────────────────────── */}
       <div
         ref={listRef}
-        className="flex h-full w-full shrink-0 flex-col overflow-y-auto pr-2 transition-all duration-300"
-        style={{ width: "38%", minWidth: 240 }}
+        className="flex w-full shrink-0 flex-col overflow-y-auto pr-2 transition-all duration-300 max-h-[32%] sm:h-full sm:max-h-none"
+        style={{ minWidth: 0 }}
       >
         <h2 className="mb-6 text-[28px] font-extrabold tracking-tight">{projectsData.modalTitle}</h2>
         <div className="space-y-3">
@@ -841,11 +846,10 @@ function ProjectsPane() {
       </div>
 
       {/* ── Right: detail panel — always visible ── */}
-      <div className="mx-5 w-px shrink-0 bg-border/40" />
+      <div className="my-4 h-px w-full shrink-0 bg-border/40 sm:mx-5 sm:my-0 sm:h-auto sm:w-px" />
       <div
         ref={detailRef}
-        className="flex h-full flex-col overflow-hidden"
-        style={{ width: "62%" }}
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden sm:h-full"
       >
           {/* detail header */}
           <div className="mb-5 flex items-start justify-between">
@@ -862,20 +866,28 @@ function ProjectsPane() {
 
           {/* scrollable detail content */}
           <div className="flex-1 overflow-y-auto overscroll-contain pr-1">
-            {/* project image placeholder */}
-            <div className={`mb-6 h-48 w-full rounded-xl ${p.accent.replace("bg-", "bg-").replace("500", "500/15")} border border-border/40 flex items-center justify-center`}>
-              <span className={`text-[12px] font-medium tracking-widest ${p.accent.replace("bg-", "text-")}/70`}>
-                {UI.projectPreview}
-              </span>
-            </div>
+            {"caseStudy" in p && p.caseStudy === "pulse" ? (
+              <React.Suspense fallback={<div className="h-48 w-full animate-pulse rounded-xl bg-muted/40" />}>
+                <PulseCaseStudy />
+              </React.Suspense>
+            ) : (
+              <>
+                {/* project image placeholder */}
+                <div className={`mb-6 h-48 w-full rounded-xl ${p.accent.replace("bg-", "bg-").replace("500", "500/15")} border border-border/40 flex items-center justify-center`}>
+                  <span className={`text-[12px] font-medium tracking-widest ${p.accent.replace("bg-", "text-")}/70`}>
+                    {UI.projectPreview}
+                  </span>
+                </div>
 
-            <p className="text-[13px] italic leading-relaxed text-foreground/50 border-l-2 border-chart-1/40 pl-4 mb-6">
-              {p.desc}
-            </p>
+                <p className="text-[13px] italic leading-relaxed text-foreground/50 border-l-2 border-chart-1/40 pl-4 mb-6">
+                  {p.desc}
+                </p>
 
-            <div className="space-y-5 text-[13px] leading-relaxed text-foreground/65">
-              <p>{p.full}</p>
-            </div>
+                <div className="space-y-5 text-[13px] leading-relaxed text-foreground/65">
+                  <p>{p.full}</p>
+                </div>
+              </>
+            )}
 
             {/* tech stack pills */}
             <div className="mt-6">
