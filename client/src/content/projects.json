@@ -8,7 +8,7 @@
       "tag": "Ops Dashboard",
       "accent": "bg-orange-500",
       "caseStudy": "pulse",
-      "cover": "/case-studies/pulse/screens/team-lead-dashboard.webp",
+      "cover": "/case-studies/pulse/screens/pulse-thumb.webp",
       "full": "Replaced hand-built Excel reports with a dashboard for each role. Saves each team lead roughly 3–5 hours a week, for about 100 regular users across 10–20 teams, on infrastructure that costs nothing to run.",
       "stack": [
         "React",

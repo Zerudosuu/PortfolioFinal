@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ron Salvador">
+  <title>Ron Salvador</title>
+  <rect width="64" height="64" rx="14" fill="#141210"/>
+  <!-- R: stem, bowl, leg -->
+  <path d="M19 15h15.5c6.9 0 11.5 4.1 11.5 10.2 0 4.6-2.6 7.8-6.7 9.2L47 49h-8.4l-6.2-13H26.5v13H19V15zm7.5 6.4v8.4h7.6c3 0 4.8-1.6 4.8-4.2s-1.8-4.2-4.8-4.2h-7.6z" fill="#f6f1e9" fill-rule="evenodd"/>
+  <!-- the orange full stop from the "Ron Salvador." wordmark, set clear of the leg -->
+  <circle cx="54.5" cy="52.5" r="3.6" fill="#f4a340"/>
+</svg>
