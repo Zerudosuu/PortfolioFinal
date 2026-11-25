@@ -164,14 +164,26 @@ const FolderFloat: React.FC<FolderFloatProps> = ({
     zone: null,
     live: false
   });
-  const latest = useRef<Latest>({} as Latest);
-  latest.current = { onSelect, onOpenChange, drift, reduce: false };
+  const latest = useRef<Latest>({ onSelect, onOpenChange, drift, reduce: false });
+  // Keep the latest callbacks for the animation loop without writing a ref during render.
+  // `reduce` is owned by the reduced-motion effect below, so it is left as is here.
+  useLayoutEffect(() => {
+    latest.current.onSelect = onSelect;
+    latest.current.onOpenChange = onOpenChange;
+    latest.current.drift = drift;
+  });
   const popTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const liveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const list: Entry[] = items.map(item => (typeof item === 'string' ? { label: item, value: item } : item));
   const n = list.length;
   const sub = sublabel || `${n} ${n === 1 ? 'note' : 'notes'}`;
   const pos = layout(list, spread, lift, tilt, sizes);
+  // String key of every pill's resting position, so physics restarts only when the layout really moves.
+  const posKey = pos.map(p => `${p.x},${p.y}`).join('|');
+  const posRef = useRef(pos);
+  useLayoutEffect(() => {
+    posRef.current = pos;
+  });
 
   const labelsKey = list.map(item => item.label).join('|');
   useLayoutEffect(() => {
@@ -185,7 +197,6 @@ const FolderFloat: React.FC<FolderFloatProps> = ({
     };
     measure();
     document.fonts?.ready.then(measure);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [n, labelsKey]);
 
   const stopPhysics = useCallback(() => {
@@ -206,8 +217,11 @@ const FolderFloat: React.FC<FolderFloatProps> = ({
     }
     w.bodies = [];
     w.drag = null;
-    w.live = false;
-    setLive(false);
+    // Only re-render when physics was actually running; closing an idle folder is a no-op.
+    if (w.live) {
+      w.live = false;
+      setLive(false);
+    }
   }, []);
 
   const startPhysics = useCallback(() => {
@@ -219,6 +233,7 @@ const FolderFloat: React.FC<FolderFloatProps> = ({
     engine.enableSleeping = false;
     w.engine = engine;
     w.sizes = (els as HTMLButtonElement[]).map(el => ({ w: el.offsetWidth, h: el.offsetHeight }));
+    const pos = posRef.current;
     const ys = pos.map(p => p.y);
     const zone = {
       left: -spread - ZONE_PAD,
@@ -284,8 +299,9 @@ const FolderFloat: React.FC<FolderFloatProps> = ({
       s.raf = requestAnimationFrame(tick);
     };
     w.raf = requestAnimationFrame(tick);
+    // posKey stands in for `pos` (read via posRef) so a re-render with identical positions keeps the same callback.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [n, spread, lift, pos.map(p => `${p.x},${p.y}`).join('|')]);
+  }, [n, spread, lift, posKey]);
 
   const set = useCallback(
     (next: boolean) => {
@@ -357,7 +373,9 @@ const FolderFloat: React.FC<FolderFloatProps> = ({
     };
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {}
+    } catch {
+      // Capture can fail if the pointer is already released; dragging still works without it.
+    }
   };
   const move = (e: PointerEvent<HTMLButtonElement>, i: number) => {
     const w = world.current;
@@ -385,7 +403,9 @@ const FolderFloat: React.FC<FolderFloatProps> = ({
     e.currentTarget.removeAttribute('data-drag');
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch {}
+    } catch {
+      // Already released (e.g. pointercancel); nothing to undo.
+    }
     if (!d.moved && e.type === 'pointerup') pick(item, i);
   };
 
